@@ -1,0 +1,37 @@
+func factorial(n : int) : int
+{
+    if n <= 1 {
+        ret 1
+    }
+    ret factorial(n - 1) * n
+}
+print factorial(3)
+
+func max(a: int, b: int): int
+{
+    if a > b
+    {
+        ret a
+    }
+    else
+    {
+        ret b
+    }
+}
+
+# FUTURE
+#func sum(a array<?>) int
+#{
+#    var s = 0
+#    for var i = 0, i < len(a), inc i
+#        s += a[i]
+#    ret s
+#}
+#
+#for var i int = 0, i < 5, inc i
+#    if i > 0 or i < 3
+#        print i * i       
+#
+#for var i in arr
+#    print i
+#

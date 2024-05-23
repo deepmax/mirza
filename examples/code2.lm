@@ -1,0 +1,39 @@
+var z = 33
+
+func foo(a : str, b : str) : void
+{
+    print a
+    print b
+}
+
+
+func max(a : int, b : int) : int
+{
+    if a > b {
+        ret a
+    } else {
+        ret b
+    }
+}
+
+func factorial(n : int) : int
+{
+    if n <= 1 {
+        ret 1
+    } else {
+        ret factorial(n - 1) * n
+    }
+}
+
+var a = 12
+var b : int = 13
+
+foo("Hi", "Bye")
+
+print "\n"
+
+print max(13, 17) + z
+
+print "\n"
+
+print factorial(3)
