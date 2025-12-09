@@ -373,6 +373,8 @@ ast_t* func_decl()
 
 ast_t* func_ret()
 {
+    if (context_get_func(context) == NULL)
+        panic("Return statement outside of function.");
     match(TK_RETURN);
     // according to func return type, expect an expression or nothing
     return (ast_t*) ast_new_func_return(expression());
@@ -446,12 +448,16 @@ ast_t* for_loop()
 
 ast_t* break_loop()
 {
+    if (context_get_loop(context) == NULL)
+        panic("Break statement outside of loop.");
     match(TK_BREAK);
     return (ast_t*) ast_new_break_loop(context_get_loop(context));
 }
 
 ast_t* continue_loop()
 {
+    if (context_get_loop(context) == NULL)
+        panic("Continue statement outside of loop.");
     match(TK_CONTINUE);
     return (ast_t*) ast_new_continue_loop(context_get_loop(context));
 }
@@ -476,21 +482,15 @@ ast_t* statement()
         return for_loop();
     case TK_FUNC:
         return func_decl();
-    default:
-    }
-
-    if ((look.type == TK_BREAK || look.type == TK_CONTINUE) && context_get_loop(context) != NULL)
-    {
-        if (look.type == TK_BREAK)
-            return break_loop();
-        else
-            return continue_loop();
-    }
-
-    if (look.type == TK_RETURN && context_get_func(context) != NULL)
+    case TK_BREAK:
+        return break_loop();
+    case TK_CONTINUE:
+        return continue_loop();
+    case TK_RETURN:
         return func_ret();
-
-    return expression();
+    default:
+        return expression();
+    }
 }
 
 void parser_start()

@@ -1,6 +1,0 @@
-services:
-  compile:
-    build: .
-    command: echo "Hi"
-    volumes:
-      - .:/code

@@ -16,6 +16,7 @@ vector_t* vec_clone(vector_t* vector)
 {
     vector_t* cloned = vec_new(vector->vect_used);
     memcpy(cloned->nodes, vector->nodes, vector->vect_used * sizeof(vector_node_t));
+    cloned->vect_used = vector->vect_used;
     return cloned;
 }
 

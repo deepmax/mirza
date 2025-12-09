@@ -24,6 +24,12 @@ $(TARGET): $(OBJECTS)
 run: $(TARGET)
 	./$(TARGET)
 
+test:
+	$(MAKE) -C tests test $(filter-out test,$(MAKECMDGOALS))
+
+%:
+	@:
+
 clean:
 	-rm -f -r $(BUILD)
 	-rm -f $(TARGET)
