@@ -1,41 +1,77 @@
 #include "parser.h"
-#include "vm.h"
 #include <stdio.h>
+#include <getopt.h>
+#include <string.h>
 
-void test_parser()
+int main(int argc, char *argv[])
 {
-    printf("---------\n");
+    int opt;
+    int use_stdin = 0;
+    int dasm_flag = 0;
+    int noexec_flag = 0;
 
-    parser_load("examples/code2.lm");
-    parser_start();
-    parser_free();
+    static struct option long_options[] = {
+        {"stdin", no_argument, 0, 's'},
+        {"dasm", no_argument, 0, 'd'},
+        {"noexec", no_argument, 0, 'n'},
+        {0, 0, 0, 0}
+    };
 
-    printf("\n---------\n");
-}
+    while ((opt = getopt_long(argc, argv, "", long_options, NULL)) != -1)
+    {
+        switch (opt)
+        {
+        case 's':
+            use_stdin = 1;
+            break;
+        case 'd':
+            dasm_flag = 1;
+            break;
+        case 'n':
+            noexec_flag = 1;
+            break;
+        default:
+            fprintf(stderr, "Usage: %s [--stdin] [--dasm] [--noexec] [<file.lm>]\n", argv[0]);
+            fprintf(stderr, "  --stdin    Read code from stdin instead of a file\n");
+            fprintf(stderr, "  --dasm     Show disassembly\n");
+            fprintf(stderr, "  --noexec   Only compile, do not execute\n");
+            return 1;
+        }
+    }
 
-void test_vm()
-{
-    vm_init(1024, 1024);
+    // Logic:
+    // Default: execute=true, dasm=false
+    // --dasm: execute=false, dasm=true
+    // --noexec: execute=false, dasm=dasm_flag (show dasm if --dasm also set)
+    // --dasm --noexec: execute=false, dasm=true
+    bool_t execute = !dasm_flag && !noexec_flag;
+    bool_t dasm = dasm_flag;
 
-    EMIT(ICONST, NUM32(0xFF));
-    EMIT(CALL, NUM16(0x9));
-    EMIT(HALT);
+    if (use_stdin)
+    {
+        if (optind < argc)
+        {
+            fprintf(stderr, "Error: Cannot specify both --stdin and a filename\n");
+            return 1;
+        }
+        parser_stdin();
+        parser_start(execute, dasm);
+        parser_free();
+    }
+    else if (optind < argc)
+    {
+        parser_load(argv[optind]);
+        parser_start(execute, dasm);
+        parser_free();
+    }
+    else
+    {
+        fprintf(stderr, "Usage: %s [--stdin] [--dasm] [--noexec] [<file.lm>]\n", argv[0]);
+        fprintf(stderr, "  --stdin    Read code from stdin instead of a file\n");
+        fprintf(stderr, "  --dasm     Show disassembly\n");
+        fprintf(stderr, "  --noexec   Only compile, do not execute\n");
+        return 1;
+    }
 
-    EMIT(PROC, NUM16(1), NUM16(0));
-    EMIT(ILOAD, NUM16(0));
-    EMIT(IPRINT);
-
-    EMIT(ICONST_0);
-    EMIT(RET);
-
-    vm_dasm();
-    vm_exec();
-
-    vm_free();
-}
-
-int main()
-{
-    test_parser();
-    // test_vm();
+    return 0;
 }

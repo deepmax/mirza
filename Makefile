@@ -1,5 +1,5 @@
 CC = cc
-TARGET = $(BUILD)/prog
+TARGET = $(BUILD)/mirza
 LIBS = -lm
 BUILD= build/
 CFLAGS = -g -Wall -fdiagnostics-color=always
@@ -20,6 +20,8 @@ $(BUILD)/%.o: %.c $(HEADERS)
 
 $(TARGET): $(OBJECTS)
 	$(CC) $(OBJECTS) -Wall $(LIBS) -o $@
+
+build: $(TARGET)
 
 run: $(TARGET)
 	./$(TARGET)

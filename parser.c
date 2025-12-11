@@ -2,6 +2,7 @@
 #include "token.h"
 #include "lexer.h"
 #include "ast.h"
+#include "types.h"
 #include "vm.h"
 #include "context.h"
 #include "panic.h"
@@ -52,7 +53,17 @@ static const token_type_t UNARY[] = {
 
 void parser_load(const char_t* filename)
 {
-    lexer_init(filename);
+    lexer_init_file(filename);
+    look.type = TK_BAD;
+    look.col = 0;
+    look.row = 0;
+    look = lexer_next();
+    context = global_context;
+}
+
+void parser_stdin()
+{
+    lexer_init_stdin();
     look.type = TK_BAD;
     look.col = 0;
     look.row = 0;
@@ -493,7 +504,7 @@ ast_t* statement()
     }
 }
 
-void parser_start()
+void parser_start(bool_t execute, bool_t dasm)
 {
     vm_init(2048, 512);
 
@@ -504,6 +515,13 @@ void parser_start()
 
     eval((ast_t*) block);
 
-    vm_dasm();
-    vm_exec();
+    if (dasm)
+    {
+        vm_dasm();
+    }
+    
+    if (execute)
+    {
+        vm_exec();
+    }
 }

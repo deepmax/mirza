@@ -7,6 +7,7 @@
 #include <string.h>
 
 static FILE* file;
+static bool_t is_stdin;
 static char_t look;
 static uint32_t row;
 static uint32_t col;
@@ -47,17 +48,30 @@ static const keyword_t KEYWORDS[] = {
     {"__line__", TK_LINE},
 };
 
-void lexer_init(const char_t* filename)
+void lexer_init_file(const char_t* filename)
 {
     row = 0;
     col = 0;
     look = 0;
+    is_stdin = false;
     file = fopen(filename, "r");
+}
+
+void lexer_init_stdin()
+{
+    row = 0;
+    col = 0;
+    look = 0;
+    is_stdin = true;
+    file = stdin;
 }
 
 void lexer_free()
 {
-    fclose(file);
+    if (!is_stdin)
+    {
+        fclose(file);
+    }
 }
 
 uint32_t lexer_row()
