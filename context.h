@@ -22,6 +22,7 @@ typedef struct
 {
     jump_t* begin;
     jump_t* end;
+    jump_t* post;
 } loop_t;
 
 typedef struct context_t

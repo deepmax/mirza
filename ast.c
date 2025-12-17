@@ -292,33 +292,6 @@ mirza_type_t eval_if_cond(ast_if_cond_t* ast)
     return MT_UNKNOWN;
 }
 
-mirza_type_t eval_while_loop(ast_while_loop_t* ast)
-{
-    if (ast->loop == NULL)
-        return MT_UNKNOWN;
-    
-    jump_label(ast->loop->begin);
-
-    eval(ast->condition);
-
-    EMIT(JEZ);
-
-    jump_to(ast->loop->end);
-
-    eval(ast->body);
-
-    EMIT(JMP);
-
-    jump_to(ast->loop->begin);
-
-    jump_label(ast->loop->end);
-
-    jump_fix(ast->loop->begin);
-    jump_fix(ast->loop->end);
-
-    return MT_UNKNOWN;
-}
-
 mirza_type_t eval_for_loop(ast_for_loop_t* ast)
 {
     if (ast->loop == NULL)
@@ -336,6 +309,8 @@ mirza_type_t eval_for_loop(ast_for_loop_t* ast)
 
     eval(ast->body);
 
+    jump_label(ast->loop->post);
+
     eval(ast->post);
 
     EMIT(JMP);
@@ -346,6 +321,7 @@ mirza_type_t eval_for_loop(ast_for_loop_t* ast)
 
     jump_fix(ast->loop->begin);
     jump_fix(ast->loop->end);
+    jump_fix(ast->loop->post);
 
     return MT_UNKNOWN;
 }
@@ -405,7 +381,7 @@ mirza_type_t eval_continue_loop(ast_continue_loop_t* ast)
 {
     EMIT(JMP);
 
-    jump_to(ast->loop->begin);
+    jump_to(ast->loop->post);
 
     return MT_UNKNOWN;
 }
@@ -496,17 +472,6 @@ ast_if_cond_t* ast_new_if_cond(ast_t* condition, ast_t* if_then, ast_t* if_else)
     ast_if_cond->if_then = if_then;
     ast_if_cond->if_else = if_else;
     return ast_if_cond;
-}
-
-ast_while_loop_t* ast_new_while_loop(ast_t* condition, ast_t* body)
-{
-    ast_while_loop_t* ast_while_loop = malloc(sizeof (ast_while_loop_t));
-    ast_while_loop->base = ast_new();
-    ast_while_loop->base->eval = (eval_t) eval_while_loop;
-    ast_while_loop->condition = condition;
-    ast_while_loop->body = body;
-    ast_while_loop->loop = body == NULL ? NULL : context_get_loop(((ast_block_t*) body)->context);
-    return ast_while_loop;
 }
 
 ast_for_loop_t* ast_new_for_loop(ast_t* init, ast_t* condition, ast_t* post, ast_t* body)

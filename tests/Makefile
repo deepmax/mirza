@@ -12,6 +12,10 @@ TEST_TARGETS = $(patsubst test_%.c, $(BUILD)/test_%, $(TEST_SOURCES))
 # Source files to test (from parent directory)
 SOURCE_FILES = ../vector.c ../list.c ../buffer.c
 
+# Compiler source files
+COMPILER_SOURCES = ../ast.c ../buffer.c ../context.c ../jump.c ../lexer.c ../list.c ../panic.c ../parser.c ../vector.c ../vm.c
+COMPILER_OBJECTS = $(patsubst ../%.c, $(BUILD)/%.o, $(COMPILER_SOURCES))
+
 default: test-all
 
 # Build all test executables
@@ -30,6 +34,35 @@ $(BUILD)/buffer.o: ../buffer.c ../buffer.h ../types.h
 	mkdir -p $(BUILD)
 	$(CC) $(CFLAGS) -c $< -o $@
 
+# Build compiler object files
+$(BUILD)/ast.o: ../ast.c ../ast.h
+	mkdir -p $(BUILD)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(BUILD)/context.o: ../context.c ../context.h
+	mkdir -p $(BUILD)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(BUILD)/jump.o: ../jump.c ../jump.h
+	mkdir -p $(BUILD)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(BUILD)/lexer.o: ../lexer.c ../lexer.h
+	mkdir -p $(BUILD)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(BUILD)/panic.o: ../panic.c ../panic.h
+	mkdir -p $(BUILD)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(BUILD)/parser.o: ../parser.c ../parser.h
+	mkdir -p $(BUILD)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(BUILD)/vm.o: ../vm.c ../vm.h
+	mkdir -p $(BUILD)
+	$(CC) $(CFLAGS) -c $< -o $@
+
 # Build test executables
 $(BUILD)/test_vector: test_vector.c $(BUILD)/vector.o
 	mkdir -p $(BUILD)
@@ -42,6 +75,11 @@ $(BUILD)/test_list: test_list.c $(BUILD)/list.o
 $(BUILD)/test_buffer: test_buffer.c $(BUILD)/buffer.o
 	mkdir -p $(BUILD)
 	$(CC) $(CFLAGS) $< $(BUILD)/buffer.o $(LIBS) -o $@
+
+# Build compiler test executable
+$(BUILD)/test_lvl1: test_lvl1.c $(COMPILER_OBJECTS)
+	mkdir -p $(BUILD)
+	$(CC) $(CFLAGS) $< $(COMPILER_OBJECTS) $(LIBS) -o $@
 
 # Run all tests
 test-all: all
@@ -81,6 +119,9 @@ test-list: $(BUILD)/test_list
 
 test-buffer: $(BUILD)/test_buffer
 	$(BUILD)/test_buffer
+
+test-lvl1: $(BUILD)/test_lvl1
+	$(BUILD)/test_lvl1
 
 # Prevent make from trying to build arguments as targets
 %:

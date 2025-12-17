@@ -15,6 +15,7 @@ context_t* context_new(context_t* parent, mirza_block_t block_type)
     {
         context->loop.begin = jump_new();
         context->loop.end = jump_new();
+        context->loop.post = jump_new();
     }
     return context;
 }

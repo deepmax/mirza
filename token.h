@@ -20,7 +20,6 @@ typedef enum
     TK_IF,
     TK_ELSE,
     TK_LOOP,
-    TK_WHILE,
     TK_FOR,
     TK_IN,
     TK_DOTDOT,

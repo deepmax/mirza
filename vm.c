@@ -121,6 +121,7 @@ void vm_init(size_t stack_size_, size_t program_size_)
     vm.ip = 0;
     vm.sp = 0;
     vm.bp = 0;
+    vm.halt = false;
 }
 
 void vm_free()
@@ -422,6 +423,7 @@ void exec_opcode(uint8_t* opcode)
     case IPRINT:
     {
         printf("%d", vm.stack[vm.sp].as_int);
+        fflush(stdout);
         --vm.sp;
         ++vm.ip;
         break;
@@ -680,6 +682,7 @@ void exec_opcode(uint8_t* opcode)
     case RPRINT:
     {
         printf("%f", vm.stack[vm.sp].as_real);
+        fflush(stdout);
         --vm.sp;
         ++vm.ip;
         break;
@@ -727,6 +730,7 @@ void exec_opcode(uint8_t* opcode)
     case APRINT:
     {
         printf("%s", &vm.data.data[vm.stack[vm.sp].as_ushort]);
+        fflush(stdout);
         --vm.sp;
         ++vm.ip;
         break;
@@ -734,6 +738,7 @@ void exec_opcode(uint8_t* opcode)
     case NPRINT:
     {
         printf("\n");
+        fflush(stdout);
         ++vm.ip;
         break;
     }

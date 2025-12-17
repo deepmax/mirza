@@ -431,13 +431,6 @@ ast_t* if_cond()
     return (ast_t*) ast_new_if_cond(condition, if_then, if_else);
 }
 
-ast_t* while_loop()
-{
-    match(TK_WHILE);
-    ast_t* condition = expression();
-    return (ast_t*) ast_new_while_loop(condition, block(MB_LOOP, NULL));
-}
-
 ast_t* for_loop()
 {
     context_t* new_context = context_new(context, MB_NORMAL);
@@ -487,8 +480,6 @@ ast_t* statement()
         return if_cond();
     case TK_L_BRACE:
         return block(MB_NORMAL, NULL);
-    case TK_WHILE:
-        return while_loop();
     case TK_FOR:
         return for_loop();
     case TK_FUNC:

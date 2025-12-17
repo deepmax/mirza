@@ -27,7 +27,6 @@ static const keyword_t KEYWORDS[] = {
     {"if", TK_IF},
     {"else", TK_ELSE},
     {"loop", TK_LOOP},
-    {"while", TK_WHILE},
     {"for", TK_FOR},
     {"in", TK_IN},
     {"break", TK_BREAK},

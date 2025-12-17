@@ -39,12 +39,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    // Logic:
-    // Default: execute=true, dasm=false
-    // --dasm: execute=false, dasm=true
-    // --noexec: execute=false, dasm=dasm_flag (show dasm if --dasm also set)
-    // --dasm --noexec: execute=false, dasm=true
-    bool_t execute = !dasm_flag && !noexec_flag;
+    bool_t execute = !noexec_flag;
     bool_t dasm = dasm_flag;
 
     if (use_stdin)

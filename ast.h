@@ -78,14 +78,6 @@ typedef struct
     ast_t* if_else;
 } ast_if_cond_t;
 
-typedef struct
-{
-    ast_t* base;
-    ast_t* condition;
-    ast_t* body;
-    loop_t* loop;
-
-} ast_while_loop_t;
 
 typedef struct
 {
@@ -144,7 +136,6 @@ ast_variable_t* ast_new_variable(symbol_t* symbol);
 ast_assign_t* ast_new_assign(symbol_t* symbol, ast_t* expr);
 ast_block_t* ast_new_block(context_t* context);
 ast_if_cond_t* ast_new_if_cond(ast_t* condition, ast_t* if_then, ast_t* if_else);
-ast_while_loop_t* ast_new_while_loop(ast_t* condition, ast_t* body);
 ast_for_loop_t* ast_new_for_loop(ast_t* init, ast_t* condition, ast_t* post, ast_t* body);
 ast_func_decl_t* ast_new_func_decl(symbol_t* symbol, ast_block_t* body, uint16_t args, mirza_type_t ret_type);
 ast_func_return_t* ast_new_func_return(ast_t* expr);
