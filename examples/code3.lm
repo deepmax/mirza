@@ -1,6 +1,6 @@
-for var i = 0; i < 5; i = i + 1 {
-    if i == 2 {
-        continue
-    }
-    print i
-}
+var a = 22
+var b = 22
+var c = a != b
+
+print c
+

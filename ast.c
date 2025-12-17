@@ -107,6 +107,9 @@ mirza_type_t eval_binary(ast_binary_t* ast)
         case TK_EQ:
             EMIT(IEQ);
             break;
+        case TK_NE:
+            EMIT(INQ);
+            break;
         case TK_LT:
             EMIT(ILT);
             break;
@@ -150,6 +153,9 @@ mirza_type_t eval_binary(ast_binary_t* ast)
             break;
         case TK_EQ:
             EMIT(REQ);
+            break;
+        case TK_NE:
+            EMIT(RNQ);
             break;
         case TK_LT:
             EMIT(RLT);
