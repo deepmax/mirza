@@ -390,6 +390,7 @@ token_t lexer_next()
         }
         else
         {
+            buffer_add(&str, 0);
             buffer_shrink(&str);
 
             token.type = TK_STR;

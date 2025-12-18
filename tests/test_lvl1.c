@@ -381,7 +381,7 @@ static void test_nested_loops(test_suite_t* suite)
     compile_and_run("for var i = 0; i < 2; i = i + 1 {\nfor var j = 0; j < 2; j = j + 1 {\nprint i * 10 + j\n}\n}\n");
     capture_stdout_end();
     
-    TEST_ASSERT_STR_EQ(captured_output, "0112", "should print 0112");
+    TEST_ASSERT_STR_EQ(captured_output, "011011", "should print 011011");
 }
 
 // Test 29: Logical AND
