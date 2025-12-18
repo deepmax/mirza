@@ -39,8 +39,8 @@ int main(int argc, char *argv[])
         }
     }
 
-    bool_t execute = !noexec_flag;
-    bool_t dasm = dasm_flag;
+    bool execute = !noexec_flag;
+    bool dasm = dasm_flag;
 
     if (use_stdin)
     {

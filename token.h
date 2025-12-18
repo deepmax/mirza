@@ -71,12 +71,12 @@ typedef enum
 
 typedef union
 {
-    char_t* as_str;
-    byte_t as_byte;
-    bool_t as_bool;
+    char* as_str;
+    uint8_t as_byte;
+    bool as_bool;
     real_t as_real;
-    integer_t as_int;
-    longint_t as_long;
+    int32_t as_int;
+    int64_t as_long;
 } token_value_t;
 
 typedef struct

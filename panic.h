@@ -8,7 +8,7 @@ extern "C"
 {
 #endif
 
-void panic(const char_t* msg);
+void panic(const char* msg);
 
 #ifdef __cplusplus
 }

@@ -8,10 +8,10 @@
 
 typedef struct
 {
-    bool_t halt;            // If `true`, stop the running machine and exit
-    uinteger_t ip;          // Points the index of current machine instruction to execute: program[ip] or *(program + ip)
-    uinteger_t sp;          // Points the top element of the machine stack: stack[sp]
-    uinteger_t bp;          // Base index
+    bool halt;            // If `true`, stop the running machine and exit
+    uint32_t ip;          // Points the index of current machine instruction to execute: program[ip] or *(program + ip)
+    uint32_t sp;          // Points the top element of the machine stack: stack[sp]
+    uint32_t bp;          // Base index
     mirza_value_t* stack;
     size_t stack_size;
     buffer_t program;
@@ -177,8 +177,8 @@ void exec_opcode(uint8_t* opcode)
     {
         uint16_t args = *((uint16_t*) (opcode + 1));
         uint16_t vars = *((uint16_t*) (opcode + 3));
-        uinteger_t _bp = vm.stack[vm.sp].as_uint;
-        uinteger_t _ip = vm.stack[vm.sp - 1].as_uint;
+        uint32_t _bp = vm.stack[vm.sp].as_uint;
+        uint32_t _ip = vm.stack[vm.sp - 1].as_uint;
         vm.stack[vm.sp].as_uint = 0;
         vm.stack[vm.sp - 1].as_uint = 0;
         vm.sp += vars - 2;
@@ -199,9 +199,9 @@ void exec_opcode(uint8_t* opcode)
     case RET:
     {
         mirza_value_t retv = vm.stack[vm.sp--];
-        uinteger_t drops = vm.stack[vm.sp--].as_uint;
-        uinteger_t _bp = vm.stack[vm.sp--].as_uint;
-        uinteger_t _ip = vm.stack[vm.sp--].as_uint;
+        uint32_t drops = vm.stack[vm.sp--].as_uint;
+        uint32_t _bp = vm.stack[vm.sp--].as_uint;
+        uint32_t _ip = vm.stack[vm.sp--].as_uint;
         vm.sp -= drops;
         vm.stack[++vm.sp] = retv;
         vm.ip = (uint16_t) _ip;
@@ -657,7 +657,7 @@ void exec_opcode(uint8_t* opcode)
     }
     case RCONST:
     {
-        vm.stack[++vm.sp].as_ulong = *((ulongint_t*) (opcode + 1));
+        vm.stack[++vm.sp].as_ulong = *((uint64_t*) (opcode + 1));
         vm.ip += 9;
         break;
     }
@@ -689,7 +689,7 @@ void exec_opcode(uint8_t* opcode)
     }
     case RTOI:
     {
-        vm.stack[vm.sp].as_int = (integer_t) vm.stack[vm.sp].as_real;
+        vm.stack[vm.sp].as_int = (int32_t) vm.stack[vm.sp].as_real;
         ++vm.ip;
         break;
     }
@@ -723,7 +723,7 @@ void exec_opcode(uint8_t* opcode)
     }
     case ACONST:
     {
-        vm.stack[++vm.sp].as_short = *((ushort_t*) (opcode + 1));
+        vm.stack[++vm.sp].as_short = *((uint16_t*) (opcode + 1));
         vm.ip += 3;
         break;
     }
@@ -791,12 +791,12 @@ void vm_dasm()
     }
 }
 
-void vm_code_emit(byte_t* bytes, size_t len)
+void vm_code_emit(uint8_t* bytes, size_t len)
 {
     buffer_adds(&vm.program, bytes, len);
 }
 
-void vm_code_set(size_t index, byte_t* bytes, size_t len)
+void vm_code_set(size_t index, uint8_t* bytes, size_t len)
 {
     buffer_sets(&vm.program, index, bytes, len);
 }
@@ -806,7 +806,7 @@ size_t vm_code_addr()
     return buffer_size(&vm.program);
 }
 
-void vm_data_emit(byte_t* bytes, size_t len)
+void vm_data_emit(uint8_t* bytes, size_t len)
 {
     buffer_adds(&vm.data, bytes, len);
 }
@@ -816,7 +816,7 @@ size_t vm_data_addr()
     return buffer_size(&vm.data);
 }
 
-void vm_save(char_t* name)
+void vm_save(char* name)
 {
     // this must have data ...
     FILE* file = fopen(name, "w");
@@ -824,6 +824,6 @@ void vm_save(char_t* name)
     fclose(file);
 }
 
-void vm_load(char_t* name)
+void vm_load(char* name)
 {
 }

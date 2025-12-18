@@ -7,14 +7,14 @@
 #include <string.h>
 
 static FILE* file;
-static bool_t is_stdin;
-static char_t look;
+static bool is_stdin;
+static char look;
 static uint32_t row;
 static uint32_t col;
 
 typedef struct
 {
-    const char_t* name;
+    const char* name;
     const token_type_t token_type;
 } keyword_t;
 
@@ -47,7 +47,7 @@ static const keyword_t KEYWORDS[] = {
     {"__line__", TK_LINE},
 };
 
-void lexer_init_file(const char_t* filename)
+void lexer_init_file(const char* filename)
 {
     row = 0;
     col = 0;
@@ -124,7 +124,7 @@ int fpeek(FILE *stream)
     return c;
 }
 
-token_type_t find_keyword(const char_t* name)
+token_type_t find_keyword(const char* name)
 {
     for (int i = 0; i < sizeof (KEYWORDS) / sizeof (KEYWORDS[0]); i++)
     {
@@ -282,13 +282,13 @@ token_t lexer_next()
         buffer_add(&ident, '\0');
         buffer_shrink(&ident);
 
-        token_type_t t = find_keyword((char_t*)ident.data);
+        token_type_t t = find_keyword((char*)ident.data);
         token.type = t == TK_BAD ? TK_IDENT : t;
-        token.value.as_str = (char_t*) ident.data;
+        token.value.as_str = (char*) ident.data;
     }
     else if (isdigit(look))
     {
-        bool_t has_dot = false;
+        bool has_dot = false;
 
         buffer_t number;
         buffer_init(&number, 32);
@@ -296,7 +296,7 @@ token_t lexer_next()
 
         while (true)
         {
-            char_t peek = fpeek(file);
+            char peek = fpeek(file);
 
             if (isdigit(peek) || peek == '.')
             {
@@ -321,15 +321,15 @@ token_t lexer_next()
 
         if (has_dot)
         {
-            byte_t* end = number.data + number.used - 1;
+            uint8_t* end = number.data + number.used - 1;
             token.type = TK_REAL;
-            token.value.as_real = strtod((char_t*) number.data, (char_t**) &end);
+            token.value.as_real = strtod((char*) number.data, (char**) &end);
         }
         else
         {
-            byte_t* end = number.data + number.used - 1;
+            uint8_t* end = number.data + number.used - 1;
             token.type = TK_INT;
-            token.value.as_int = strtol((char_t*) number.data, (char_t**) &end, 10);
+            token.value.as_int = strtol((char*) number.data, (char**) &end, 10);
         }
     }
     else if (look == '"')
@@ -341,7 +341,7 @@ token_t lexer_next()
         {
             if (look == '\\')
             {
-                char_t escaped = 0;
+                char escaped = 0;
                 switch (fpeek(file))
                 {
                 case 'n':
@@ -394,7 +394,7 @@ token_t lexer_next()
             buffer_shrink(&str);
 
             token.type = TK_STR;
-            token.value.as_str = (char_t*) str.data;
+            token.value.as_str = (char*) str.data;
         }
     }
 

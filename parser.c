@@ -15,7 +15,7 @@ static context_t* context;
 ast_t* factor();
 ast_t* expression();
 ast_t* statement();
-ast_t* func_call(const char_t* id);
+ast_t* func_call(const char* id);
 
 typedef struct
 {
@@ -25,7 +25,7 @@ typedef struct
 
 typedef struct
 {
-    char_t* id;
+    char* id;
     mirza_type_t type;
 } param_t;
 
@@ -51,7 +51,7 @@ static const token_type_t UNARY[] = {
     TK_NOT,
 };
 
-void parser_load(const char_t* filename)
+void parser_load(const char* filename)
 {
     lexer_init_file(filename);
     look.type = TK_BAD;
@@ -86,12 +86,12 @@ int16_t token_prec(token_type_t token_type)
     return -1;
 }
 
-bool_t is_binary(token_type_t token_type)
+bool is_binary(token_type_t token_type)
 {
     return token_prec(token_type) > 0;
 }
 
-bool_t is_unary(token_type_t token_type)
+bool is_unary(token_type_t token_type)
 {
     for (int i = 0; i<sizeof (UNARY) / sizeof (UNARY[0]); i++)
     {
@@ -109,7 +109,7 @@ void match(token_type_t token_type)
         panic("Not expected token");
 }
 
-char_t* peek_ident()
+char* peek_ident()
 {
     if (look.type != TK_IDENT)
         panic("An identifier is expected");
@@ -137,7 +137,7 @@ mirza_type_t data_type()
     return t;
 }
 
-ast_t* assign(const char_t* id)
+ast_t* assign(const char* id)
 {
     symbol_t* s = context_get(context, id, false);
 
@@ -153,7 +153,7 @@ ast_t* var()
 {
     match(TK_VAR);
 
-    const char_t* id = peek_ident();
+    const char* id = peek_ident();
 
     match(TK_IDENT);
 
@@ -176,7 +176,7 @@ ast_t* var()
 
 ast_t* ident()
 {
-    const char_t* id = peek_ident();
+    const char* id = peek_ident();
 
     match(TK_IDENT);
 
@@ -347,7 +347,7 @@ ast_t* func_decl()
 {
     match(TK_FUNC);
 
-    const char_t* id = peek_ident();
+    const char* id = peek_ident();
     match(TK_IDENT);
 
     if (context_get(context, id, false) != NULL)
@@ -391,7 +391,7 @@ ast_t* func_ret()
     return (ast_t*) ast_new_func_return(expression());
 }
 
-ast_t* func_call(const char_t* id)
+ast_t* func_call(const char* id)
 {
     symbol_t* s = context_get(context, id, false);
 
@@ -495,7 +495,7 @@ ast_t* statement()
     }
 }
 
-void parser_start(bool_t execute, bool_t dasm)
+void parser_start(bool execute, bool dasm)
 {
     vm_init(2048, 512);
 

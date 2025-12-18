@@ -12,10 +12,10 @@ extern "C"
 
 typedef struct
 {
-    const char_t* id;
+    const char* id;
     mirza_type_t type;
     uint16_t addr;
-    bool_t global;
+    bool global;
 } symbol_t;
 
 typedef struct
@@ -37,9 +37,9 @@ typedef struct context_t
 context_t* context_new(context_t* parent, mirza_block_t block_type);
 context_t* context_clone(context_t* context);
 void context_free(context_t* context);
-symbol_t* context_add(context_t* context, const char_t* id, mirza_type_t type);
-symbol_t* context_get(context_t* context, const char_t* id, bool_t local);
-bool_t context_is_global(context_t* context);
+symbol_t* context_add(context_t* context, const char* id, mirza_type_t type);
+symbol_t* context_get(context_t* context, const char* id, bool local);
+bool context_is_global(context_t* context);
 size_t context_symbols_count(context_t* context);
 uint16_t context_allocated(context_t* context);
 void context_add_args_count(context_t* context, uint16_t count);

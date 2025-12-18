@@ -9,7 +9,7 @@ extern "C"
 {
 #endif
 
-void lexer_init_file(const char_t* filename);
+void lexer_init_file(const char* filename);
 void lexer_init_stdin();
 void lexer_free();
 token_t lexer_next();

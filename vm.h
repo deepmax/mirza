@@ -3,9 +3,9 @@
 
 #include "types.h"
 
-#define EMIT(...) do{byte_t b[] = { __VA_ARGS__ }; vm_code_emit(b, sizeof(b) / sizeof(b[0]));}while(0)
-#define CODE(i, ...) do{byte_t b[] = { __VA_ARGS__ }; vm_code_set(i, b, sizeof(b) / sizeof(b[0]));}while(0)
-//#define DATA(...) do{byte_t b[] = { __VA_ARGS__ }; vm_data_emit(b, sizeof(b) / sizeof(b[0]));}while(0)
+#define EMIT(...) do{uint8_t b[] = { __VA_ARGS__ }; vm_code_emit(b, sizeof(b) / sizeof(b[0]));}while(0)
+#define CODE(i, ...) do{uint8_t b[] = { __VA_ARGS__ }; vm_code_set(i, b, sizeof(b) / sizeof(b[0]));}while(0)
+//#define DATA(...) do{uint8_t b[] = { __VA_ARGS__ }; vm_data_emit(b, sizeof(b) / sizeof(b[0]));}while(0)
 
 enum
 {
@@ -67,12 +67,12 @@ enum
     RCEIL,
     RFLOOR,
     RROUND,
-    RGT, // isgreater
-    RLT, // isless
-    RGE, // isgreaterequal
-    RLE, // islessequal
+    RGT,
+    RLT,
+    RGE,
+    RLE,
     REQ,
-    RNQ, // islessgreater ? isinf ? isnan ?
+    RNQ,
     RLOAD,
     RSTORE,
     RLOADG,
@@ -141,7 +141,7 @@ typedef struct
 {
     const uint8_t code;
     const uint8_t arg_size;
-    const char_t name[32];
+    const char name[32];
 } opcode_t;
 
 extern const opcode_t OPCODES[];
@@ -151,12 +151,12 @@ void vm_free();
 void vm_exec();
 void vm_dump();
 void vm_dasm();
-void vm_save(char_t* name);
-void vm_load(char_t* name);
-void vm_code_emit(byte_t* bytes, size_t len);
-void vm_code_set(size_t index, byte_t* bytes, size_t len);
+void vm_save(char* name);
+void vm_load(char* name);
+void vm_code_emit(uint8_t* bytes, size_t len);
+void vm_code_set(size_t index, uint8_t* bytes, size_t len);
 size_t vm_code_addr();
-void vm_data_emit(byte_t* bytes, size_t len);
+void vm_data_emit(uint8_t* bytes, size_t len);
 size_t vm_data_addr();
 
 #endif /* VM_H */
