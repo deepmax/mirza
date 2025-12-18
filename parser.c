@@ -26,7 +26,7 @@ typedef struct
 typedef struct
 {
     char* id;
-    mirza_type_t type;
+    type_t type;
 } param_t;
 
 const bin_op_prec_t BIN_OP_PREC[] = {
@@ -117,15 +117,15 @@ char* peek_ident()
     return look.value.as_str;
 }
 
-mirza_type_t data_type()
+type_t data_type()
 {
     match(TK_COLON);
 
-    mirza_type_t t = MT_UNKNOWN;
+    type_t t = MT_UNKNOWN;
 
     switch (look.type)
     {
-        case TK_INT: t = MT_INT; break;
+        case TK_INT32: t = MT_INT32; break;
         case TK_STR: t = MT_STR; break;
         case TK_REAL: t = MT_REAL; break;
         case TK_BOOL: t = MT_BOOL; break;
@@ -241,42 +241,42 @@ ast_t* factor()
     else if (look.type == TK_TRUE)
     {
         match(TK_TRUE);
-        mirza_value_t value;
-        value.as_int = 1;
-        node = (ast_t*) ast_new_constant(MT_INT, value);
+        value_t value;
+        value.as_int32 = 1;
+        node = (ast_t*) ast_new_constant(MT_INT32, value);
     }
     else if (look.type == TK_FALSE)
     {
         match(TK_FALSE);
-        mirza_value_t value;
-        value.as_int = 0;
-        node = (ast_t*) ast_new_constant(MT_INT, value);
+        value_t value;
+        value.as_int32 = 0;
+        node = (ast_t*) ast_new_constant(MT_INT32, value);
     }
     else if (look.type == TK_LINE)
     {
         uint32_t line = look.row;
         match(TK_LINE);
-        mirza_value_t value;
-        value.as_int = line;
-        node = (ast_t*) ast_new_constant(MT_INT, value);
+        value_t value;
+        value.as_int32 = line;
+        node = (ast_t*) ast_new_constant(MT_INT32, value);
     }
-    else if (look.type == TK_INT)
+    else if (look.type == TK_INT32)
     {
-        mirza_value_t value;
-        value.as_int = look.value.as_int;
-        match(TK_INT);
-        node = (ast_t*) ast_new_constant(MT_INT, value);
+        value_t value;
+        value.as_int32 = look.value.as_int;
+        match(TK_INT32);
+        node = (ast_t*) ast_new_constant(MT_INT32, value);
     }
     else if (look.type == TK_REAL)
     {
-        mirza_value_t value;
+        value_t value;
         value.as_real = look.value.as_real;
         match(TK_REAL);
         node = (ast_t*) ast_new_constant(MT_REAL, value);
     }
     else if (look.type == TK_STR)
     {
-        mirza_value_t value;
+        value_t value;
         value.as_str = look.value.as_str;
         match(TK_STR);
         node = (ast_t*) ast_new_constant(MT_STR, value);
@@ -310,7 +310,7 @@ ast_t* print()
     return (ast_t*) ast_new_print(expression());
 }
 
-ast_t* block(mirza_block_t type, vector_t* params)
+ast_t* block(block_t type, vector_t* params)
 {
     match(TK_L_BRACE);
 
@@ -375,7 +375,7 @@ ast_t* func_decl()
     }
     match(TK_R_PAREN);
 
-    mirza_type_t ret_type = data_type();
+    type_t ret_type = data_type();
 
     s->type = MT_FUNC;
 

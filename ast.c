@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <stddef.h>
 
-mirza_type_t eval(ast_t* ast)
+type_t eval(ast_t* ast)
 {
     return ast ? ast->base->eval(ast) : MT_UNKNOWN;
 }
@@ -17,20 +17,20 @@ void halt()
     EMIT(HALT);
 }
 
-mirza_type_t eval_constant(ast_constant_t* ast)
+type_t eval_constant(ast_constant_t* ast)
 {
-    if (ast->type == MT_INT)
+    if (ast->type == MT_INT32)
     {
-        if (ast->value.as_int == 0)
+        if (ast->value.as_int32 == 0)
             EMIT(ICONST_0);
-        else if (ast->value.as_int == 1)
+        else if (ast->value.as_int32 == 1)
             EMIT(ICONST_1);
         else
-            EMIT(ICONST, NUM32(ast->value.as_int));
+            EMIT(ICONST, NUM32(ast->value.as_int32));
     }
     else if (ast->type == MT_REAL)
     {
-        EMIT(RCONST, NUM64(ast->value.as_ulong));
+        EMIT(RCONST, NUM64(ast->value.as_uint64));
     }
     else if (ast->type == MT_STR)
     {
@@ -41,11 +41,11 @@ mirza_type_t eval_constant(ast_constant_t* ast)
     return ast->type;
 }
 
-mirza_type_t eval_unary(ast_unary_t* ast)
+type_t eval_unary(ast_unary_t* ast)
 {
-    mirza_type_t out = eval(ast->expr);
+    type_t out = eval(ast->expr);
 
-    if (out == MT_INT)
+    if (out == MT_INT32)
     {
         switch (ast->op)
         {
@@ -80,12 +80,12 @@ mirza_type_t eval_unary(ast_unary_t* ast)
     return MT_UNKNOWN;
 }
 
-mirza_type_t eval_binary(ast_binary_t* ast)
+type_t eval_binary(ast_binary_t* ast)
 {
-    mirza_type_t l_out = eval(ast->lhs_expr);
-    mirza_type_t r_out = eval(ast->rhs_expr);
+    type_t l_out = eval(ast->lhs_expr);
+    type_t r_out = eval(ast->rhs_expr);
 
-    if (l_out == MT_INT && r_out == MT_INT)
+    if (l_out == MT_INT32 && r_out == MT_INT32)
     {
         switch (ast->op)
         {
@@ -130,7 +130,7 @@ mirza_type_t eval_binary(ast_binary_t* ast)
             break;
         default:
         }
-        return MT_INT;
+        return MT_INT32;
     }
     else if (l_out == MT_REAL && r_out == MT_REAL)
     {
@@ -175,13 +175,13 @@ mirza_type_t eval_binary(ast_binary_t* ast)
     return MT_UNKNOWN;
 }
 
-mirza_type_t eval_print(ast_print_t* ast)
+type_t eval_print(ast_print_t* ast)
 {
-    mirza_type_t out = eval(ast->expr);
+    type_t out = eval(ast->expr);
 
     switch (out)
     {
-    case MT_INT:
+    case MT_INT32:
         EMIT(IPRINT);
         break;
     case MT_REAL:
@@ -196,9 +196,9 @@ mirza_type_t eval_print(ast_print_t* ast)
     return MT_UNKNOWN;
 }
 
-mirza_type_t eval_variable(ast_variable_t* ast)
+type_t eval_variable(ast_variable_t* ast)
 {
-    if (ast->symbol->type == MT_INT)
+    if (ast->symbol->type == MT_INT32)
     {
         if (ast->symbol->global)
             EMIT(ILOADG, NUM16(ast->symbol->addr));
@@ -219,14 +219,14 @@ mirza_type_t eval_variable(ast_variable_t* ast)
     return ast->symbol->type;
 }
 
-mirza_type_t eval_assign(ast_assign_t* ast)
+type_t eval_assign(ast_assign_t* ast)
 {
-    mirza_type_t out = eval(ast->expr);
+    type_t out = eval(ast->expr);
 
     if (ast->symbol->type != MT_UNKNOWN && ast->symbol->type != out)
         panic("Assignment type mismatch");
 
-    if (out == MT_INT)
+    if (out == MT_INT32)
     {
         if (ast->symbol->global)
             EMIT(ISTOREG, NUM16(ast->symbol->addr));
@@ -250,7 +250,7 @@ mirza_type_t eval_assign(ast_assign_t* ast)
     return out;
 }
 
-mirza_type_t eval_block(ast_block_t* ast)
+type_t eval_block(ast_block_t* ast)
 {
     if (context_is_global(ast->context))
     {
@@ -268,7 +268,7 @@ mirza_type_t eval_block(ast_block_t* ast)
     return MT_UNKNOWN;
 }
 
-mirza_type_t eval_if_cond(ast_if_cond_t* ast)
+type_t eval_if_cond(ast_if_cond_t* ast)
 {
     jump_t* else_addr = jump_new();
     jump_t* exit_addr = jump_new();
@@ -298,7 +298,7 @@ mirza_type_t eval_if_cond(ast_if_cond_t* ast)
     return MT_UNKNOWN;
 }
 
-mirza_type_t eval_for_loop(ast_for_loop_t* ast)
+type_t eval_for_loop(ast_for_loop_t* ast)
 {
     if (ast->loop == NULL)
         return MT_UNKNOWN;
@@ -332,7 +332,7 @@ mirza_type_t eval_for_loop(ast_for_loop_t* ast)
     return MT_UNKNOWN;
 }
 
-mirza_type_t eval_func_decl(ast_func_decl_t* ast)
+type_t eval_func_decl(ast_func_decl_t* ast)
 {
     jump_t* func_end = jump_new();
     jump_t* func_beg = jump_new();
@@ -359,22 +359,22 @@ mirza_type_t eval_func_decl(ast_func_decl_t* ast)
     return MT_UNKNOWN;
 }
 
-mirza_type_t eval_func_return(ast_func_return_t* ast)
+type_t eval_func_return(ast_func_return_t* ast)
 {
-    mirza_type_t out = eval(ast->expr);
+    type_t out = eval(ast->expr);
     EMIT(RET);
     return out;
 }
 
-mirza_type_t eval_func_call(ast_func_call_t* ast)
+type_t eval_func_call(ast_func_call_t* ast)
 {
     for (size_t i = 0; i < vec_size(ast->args); i++)
         eval(vec_get(ast->args, i));
     EMIT(CALL, NUM16(ast->symbol->addr));
-    return MT_INT;
+    return MT_INT32;
 }
 
-mirza_type_t eval_break_loop(ast_break_loop_t* ast)
+type_t eval_break_loop(ast_break_loop_t* ast)
 {
     EMIT(JMP);
 
@@ -383,7 +383,7 @@ mirza_type_t eval_break_loop(ast_break_loop_t* ast)
     return MT_UNKNOWN;
 }
 
-mirza_type_t eval_continue_loop(ast_continue_loop_t* ast)
+type_t eval_continue_loop(ast_continue_loop_t* ast)
 {
     EMIT(JMP);
 
@@ -400,7 +400,7 @@ ast_t* ast_new()
     return ast;
 }
 
-ast_constant_t* ast_new_constant(mirza_type_t type, mirza_value_t value)
+ast_constant_t* ast_new_constant(type_t type, value_t value)
 {
     ast_constant_t* ast_constant = malloc(sizeof (ast_constant_t));
     ast_constant->base = ast_new();
@@ -493,7 +493,7 @@ ast_for_loop_t* ast_new_for_loop(ast_t* init, ast_t* condition, ast_t* post, ast
     return ast_for_loop;
 }
 
-ast_func_decl_t* ast_new_func_decl(symbol_t* symbol, ast_block_t* body, uint16_t args, mirza_type_t ret_type)
+ast_func_decl_t* ast_new_func_decl(symbol_t* symbol, ast_block_t* body, uint16_t args, type_t ret_type)
 {
     ast_func_decl_t* ast_func_decl = malloc(sizeof (ast_func_decl_t));
     ast_func_decl->base = ast_new();

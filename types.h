@@ -18,31 +18,36 @@ typedef enum
 {
     MT_UNKNOWN,
     MT_VOID,
-    MT_STR,
-    MT_INT,
     MT_BOOL,
-    MT_LONG,
-    MT_SHORT,
-    MT_BYTE,
+    MT_STR,
+    MT_INT32,
+    MT_INT64,
+    MT_INT16,
+    MT_INT8,
+    MT_UINT8,
+    MT_UINT16,
+    MT_UINT32,
+    MT_UINT64,
     MT_REAL,
     MT_FUNC,
     MT_LIST,
-} mirza_type_t;
+} type_t;
 
 typedef union
 {
     char_t* as_str;
-    uint8_t as_byte;
     bool_t as_bool;
     real_t as_real;
-    int16_t as_short;
-    int32_t as_int;
-    int64_t as_long;
-    uint32_t as_uint;
-    uint16_t as_ushort;
-    uint64_t as_ulong;
+    int8_t as_int8;
+    int16_t as_int16;
+    int32_t as_int32;
+    int64_t as_int64;
+    uint8_t as_uint8;
+    uint16_t as_uint16;
+    uint32_t as_uint32;
+    uint64_t as_uint64;
     uintptr_t as_ptr;
-} mirza_value_t;
+} value_t;
 
 typedef enum
 {
@@ -51,7 +56,7 @@ typedef enum
     MB_FUNC,
     MB_CLASS,
     MB_GLOBAL,
-} mirza_block_t;
+} block_t;
 
 #ifdef __cplusplus
 }

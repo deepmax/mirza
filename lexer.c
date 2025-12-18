@@ -38,7 +38,14 @@ static const keyword_t KEYWORDS[] = {
     {"and", TK_AND},
     {"or", TK_OR},
     {"not", TK_NOT},
-    {"int", TK_INT},
+    {"i8", TK_INT8},
+    {"i16", TK_INT16},
+    {"i32", TK_INT32},
+    {"i64", TK_INT64},
+    {"u8", TK_UINT8},
+    {"u16", TK_UINT16},
+    {"u32", TK_UINT32},
+    {"u64", TK_UINT64},
     {"str", TK_STR},
     {"real", TK_REAL},
     {"bool", TK_BOOL},
@@ -328,7 +335,7 @@ token_t lexer_next()
         else
         {
             uint8_t* end = number.data + number.used - 1;
-            token.type = TK_INT;
+            token.type = TK_INT32;
             token.value.as_int = strtol((char*) number.data, (char**) &end, 10);
         }
     }

@@ -4,7 +4,7 @@
 
 context_t * const global_context = &(context_t){NULL, MB_GLOBAL, NULL};
 
-context_t* context_new(context_t* parent, mirza_block_t block_type)
+context_t* context_new(context_t* parent, block_t block_type)
 {
     context_t* context = malloc(sizeof (context_t));
     context->symbols = NULL;
@@ -40,7 +40,7 @@ bool_t context_is_global(context_t* context)
     return context == global_context;
 }
 
-symbol_t* context_add(context_t* context, const char* id, mirza_type_t type)
+symbol_t* context_add(context_t* context, const char* id, type_t type)
 {
     symbol_t* symbol = context_get(context, id, true);
     if (symbol != NULL)

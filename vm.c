@@ -8,14 +8,16 @@
 
 typedef struct
 {
-    bool_t halt;            // If `true`, stop the running machine and exit
     uint32_t ip;          // Points the index of current machine instruction to execute: program[ip] or *(program + ip)
     uint32_t sp;          // Points the top element of the machine stack: stack[sp]
     uint32_t bp;          // Base index
-    mirza_value_t* stack;
+    value_t* stack;
     size_t stack_size;
     buffer_t program;
     buffer_t data;
+    struct {
+        uint8_t halt: 1;
+    } flags;
 } vm_t;
 
 static vm_t vm;
@@ -112,16 +114,16 @@ const opcode_t OPCODES[] = {
     {HALT, 0, "halt"},
 };
 
-void vm_init(size_t stack_size_, size_t program_size_)
+void vm_init(size_t stack_size, size_t code_size)
 {
     buffer_init(&vm.data, 0);
-    buffer_init(&vm.program, program_size_);
-    vm.stack = malloc(sizeof (mirza_type_t) * stack_size_);
-    vm.stack_size = stack_size_;
+    buffer_init(&vm.program, code_size);
+    vm.stack = malloc(sizeof (type_t) * stack_size);
+    vm.stack_size = stack_size;
     vm.ip = 0;
     vm.sp = 0;
     vm.bp = 0;
-    vm.halt = false;
+    vm.flags.halt = 0;
 }
 
 void vm_free()
@@ -137,7 +139,7 @@ void exec_opcode(uint8_t* opcode)
     {
     case HALT:
     {
-        vm.halt = true;
+        vm.flags.halt = 1;
         ++vm.ip;
         break;
     }
@@ -155,7 +157,7 @@ void exec_opcode(uint8_t* opcode)
     }
     case SWAP:
     {
-        mirza_value_t tmp = vm.stack[vm.sp];
+        value_t tmp = vm.stack[vm.sp];
         vm.stack[vm.sp] = vm.stack[vm.sp - 1];
         vm.stack[vm.sp - 1] = tmp;
         ++vm.ip;
@@ -177,31 +179,31 @@ void exec_opcode(uint8_t* opcode)
     {
         uint16_t args = *((uint16_t*) (opcode + 1));
         uint16_t vars = *((uint16_t*) (opcode + 3));
-        uint32_t _bp = vm.stack[vm.sp].as_uint;
-        uint32_t _ip = vm.stack[vm.sp - 1].as_uint;
-        vm.stack[vm.sp].as_uint = 0;
-        vm.stack[vm.sp - 1].as_uint = 0;
+        uint32_t _bp = vm.stack[vm.sp].as_uint32;
+        uint32_t _ip = vm.stack[vm.sp - 1].as_uint32;
+        vm.stack[vm.sp].as_uint32 = 0;
+        vm.stack[vm.sp - 1].as_uint32 = 0;
         vm.sp += vars - 2;
-        vm.stack[++vm.sp].as_uint = _ip;
-        vm.stack[++vm.sp].as_uint = _bp;
-        vm.stack[++vm.sp].as_uint = args + vars;
+        vm.stack[++vm.sp].as_uint32 = _ip;
+        vm.stack[++vm.sp].as_uint32 = _bp;
+        vm.stack[++vm.sp].as_uint32 = args + vars;
         vm.bp = vm.sp - (args + vars + 2);
         vm.ip += 5;
         break;
     }
     case CALL:
     {
-        vm.stack[++vm.sp].as_uint = vm.ip + 3;
-        vm.stack[++vm.sp].as_uint = vm.bp;
+        vm.stack[++vm.sp].as_uint32 = vm.ip + 3;
+        vm.stack[++vm.sp].as_uint32 = vm.bp;
         vm.ip = *((uint16_t*) (opcode + 1));
         break;
     }
     case RET:
     {
-        mirza_value_t retv = vm.stack[vm.sp--];
-        uint32_t drops = vm.stack[vm.sp--].as_uint;
-        uint32_t _bp = vm.stack[vm.sp--].as_uint;
-        uint32_t _ip = vm.stack[vm.sp--].as_uint;
+        value_t retv = vm.stack[vm.sp--];
+        uint32_t drops = vm.stack[vm.sp--].as_uint32;
+        uint32_t _bp = vm.stack[vm.sp--].as_uint32;
+        uint32_t _ip = vm.stack[vm.sp--].as_uint32;
         vm.sp -= drops;
         vm.stack[++vm.sp] = retv;
         vm.ip = (uint16_t) _ip;
@@ -215,7 +217,7 @@ void exec_opcode(uint8_t* opcode)
     }
     case JEZ:
     {
-        if (vm.stack[vm.sp].as_int == 0)
+        if (vm.stack[vm.sp].as_int32 == 0)
             vm.ip = *((uint16_t*) (opcode + 1));
         else
             vm.ip += 3;
@@ -224,7 +226,7 @@ void exec_opcode(uint8_t* opcode)
     }
     case JNZ:
     {
-        if (vm.stack[vm.sp].as_int != 0)
+        if (vm.stack[vm.sp].as_int32 != 0)
             vm.ip = *((uint16_t*) (opcode + 1));
         else
             vm.ip += 3;
@@ -233,196 +235,196 @@ void exec_opcode(uint8_t* opcode)
     }
     case ILOAD:
     {
-        vm.stack[vm.sp + 1].as_int = vm.stack[vm.bp + *((uint16_t*) (opcode + 1))].as_int;
+        vm.stack[vm.sp + 1].as_int32 = vm.stack[vm.bp + *((uint16_t*) (opcode + 1))].as_int32;
         ++vm.sp;
         vm.ip += 3;
         break;
     }
     case ISTORE:
     {
-        vm.stack[vm.bp + *((uint16_t*) (opcode + 1))].as_int = vm.stack[vm.sp].as_int;
+        vm.stack[vm.bp + *((uint16_t*) (opcode + 1))].as_int32 = vm.stack[vm.sp].as_int32;
         --vm.sp;
         vm.ip += 3;
         break;
     }
     case ILOADG:
     {
-        vm.stack[vm.sp + 1].as_int = vm.stack[*((uint16_t*) (opcode + 1))].as_int;
+        vm.stack[vm.sp + 1].as_int32 = vm.stack[*((uint16_t*) (opcode + 1))].as_int32;
         ++vm.sp;
         vm.ip += 3;
         break;
     }
     case ISTOREG:
     {
-        vm.stack[*((uint16_t*) (opcode + 1))].as_int = vm.stack[vm.sp].as_int;
+        vm.stack[*((uint16_t*) (opcode + 1))].as_int32 = vm.stack[vm.sp].as_int32;
         --vm.sp;
         vm.ip += 3;
         break;
     }
     case IINC:
     {
-        vm.stack[vm.sp].as_int++;
+        vm.stack[vm.sp].as_int32++;
         ++vm.ip;
         break;
     }
     case IDEC:
     {
-        vm.stack[vm.sp].as_int--;
+        vm.stack[vm.sp].as_int32--;
         ++vm.ip;
         break;
     }
     case INEG:
     {
-        vm.stack[vm.sp].as_int *= -1;
+        vm.stack[vm.sp].as_int32 *= -1;
         ++vm.ip;
         break;
     }
     case IABS:
     {
-        if (vm.stack[vm.sp].as_int < 0)
-            vm.stack[vm.sp].as_int *= -1;
+        if (vm.stack[vm.sp].as_int32 < 0)
+            vm.stack[vm.sp].as_int32 *= -1;
         ++vm.ip;
         break;
     }
     case INOT:
     {
-        vm.stack[vm.sp].as_int = ~vm.stack[vm.sp].as_int;
+        vm.stack[vm.sp].as_int32 = ~vm.stack[vm.sp].as_int32;
         ++vm.ip;
         break;
     }
     case IADD:
     {
-        vm.stack[vm.sp - 1].as_int = vm.stack[vm.sp - 1].as_int + vm.stack[vm.sp].as_int;
+        vm.stack[vm.sp - 1].as_int32 = vm.stack[vm.sp - 1].as_int32 + vm.stack[vm.sp].as_int32;
         --vm.sp;
         ++vm.ip;
         break;
     }
     case ISUB:
     {
-        vm.stack[vm.sp - 1].as_int = vm.stack[vm.sp - 1].as_int - vm.stack[vm.sp].as_int;
+        vm.stack[vm.sp - 1].as_int32 = vm.stack[vm.sp - 1].as_int32 - vm.stack[vm.sp].as_int32;
         --vm.sp;
         ++vm.ip;
         break;
     }
     case IMUL:
     {
-        vm.stack[vm.sp - 1].as_int = vm.stack[vm.sp - 1].as_int * vm.stack[vm.sp].as_int;
+        vm.stack[vm.sp - 1].as_int32 = vm.stack[vm.sp - 1].as_int32 * vm.stack[vm.sp].as_int32;
         --vm.sp;
         ++vm.ip;
         break;
     }
     case IDIV:
     {
-        vm.stack[vm.sp - 1].as_int = vm.stack[vm.sp - 1].as_int / vm.stack[vm.sp].as_int;
+        vm.stack[vm.sp - 1].as_int32 = vm.stack[vm.sp - 1].as_int32 / vm.stack[vm.sp].as_int32;
         --vm.sp;
         ++vm.ip;
         break;
     }
     case IMOD:
     {
-        vm.stack[vm.sp - 1].as_int = vm.stack[vm.sp - 1].as_int % vm.stack[vm.sp].as_int;
+        vm.stack[vm.sp - 1].as_int32 = vm.stack[vm.sp - 1].as_int32 % vm.stack[vm.sp].as_int32;
         --vm.sp;
         ++vm.ip;
         break;
     }
     case IAND:
     {
-        vm.stack[vm.sp - 1].as_int = vm.stack[vm.sp - 1].as_int && vm.stack[vm.sp].as_int;
+        vm.stack[vm.sp - 1].as_int32 = vm.stack[vm.sp - 1].as_int32 && vm.stack[vm.sp].as_int32;
         --vm.sp;
         ++vm.ip;
         break;
     }
     case IXOR:
     {
-        vm.stack[vm.sp - 1].as_int = vm.stack[vm.sp - 1].as_int ^ vm.stack[vm.sp].as_int;
+        vm.stack[vm.sp - 1].as_int32 = vm.stack[vm.sp - 1].as_int32 ^ vm.stack[vm.sp].as_int32;
         --vm.sp;
         ++vm.ip;
         break;
     }
     case IOR:
     {
-        vm.stack[vm.sp - 1].as_int = vm.stack[vm.sp - 1].as_int || vm.stack[vm.sp].as_int;
+        vm.stack[vm.sp - 1].as_int32 = vm.stack[vm.sp - 1].as_int32 || vm.stack[vm.sp].as_int32;
         --vm.sp;
         ++vm.ip;
         break;
     }
     case ISHL:
     {
-        vm.stack[vm.sp - 1].as_int = vm.stack[vm.sp - 1].as_int << vm.stack[vm.sp].as_int;
+        vm.stack[vm.sp - 1].as_int32 = vm.stack[vm.sp - 1].as_int32 << vm.stack[vm.sp].as_int32;
         --vm.sp;
         ++vm.ip;
         break;
     }
     case ISHR:
     {
-        vm.stack[vm.sp - 1].as_int = vm.stack[vm.sp - 1].as_int >> vm.stack[vm.sp].as_int;
+        vm.stack[vm.sp - 1].as_int32 = vm.stack[vm.sp - 1].as_int32 >> vm.stack[vm.sp].as_int32;
         --vm.sp;
         ++vm.ip;
         break;
     }
     case IGT:
     {
-        vm.stack[vm.sp - 1].as_int = vm.stack[vm.sp - 1].as_int > vm.stack[vm.sp].as_int;
+        vm.stack[vm.sp - 1].as_int32 = vm.stack[vm.sp - 1].as_int32 > vm.stack[vm.sp].as_int32;
         --vm.sp;
         ++vm.ip;
         break;
     }
     case ILT:
     {
-        vm.stack[vm.sp - 1].as_int = vm.stack[vm.sp - 1].as_int < vm.stack[vm.sp].as_int;
+        vm.stack[vm.sp - 1].as_int32 = vm.stack[vm.sp - 1].as_int32 < vm.stack[vm.sp].as_int32;
         --vm.sp;
         ++vm.ip;
         break;
     }
     case IGE:
     {
-        vm.stack[vm.sp - 1].as_int = vm.stack[vm.sp - 1].as_int >= vm.stack[vm.sp].as_int;
+        vm.stack[vm.sp - 1].as_int32 = vm.stack[vm.sp - 1].as_int32 >= vm.stack[vm.sp].as_int32;
         --vm.sp;
         ++vm.ip;
         break;
     }
     case ILE:
     {
-        vm.stack[vm.sp - 1].as_int = vm.stack[vm.sp - 1].as_int <= vm.stack[vm.sp].as_int;
+        vm.stack[vm.sp - 1].as_int32 = vm.stack[vm.sp - 1].as_int32 <= vm.stack[vm.sp].as_int32;
         --vm.sp;
         ++vm.ip;
         break;
     }
     case IEQ:
     {
-        vm.stack[vm.sp - 1].as_int = vm.stack[vm.sp - 1].as_int == vm.stack[vm.sp].as_int;
+        vm.stack[vm.sp - 1].as_int32 = vm.stack[vm.sp - 1].as_int32 == vm.stack[vm.sp].as_int32;
         --vm.sp;
         ++vm.ip;
         break;
     }
     case INQ:
     {
-        vm.stack[vm.sp - 1].as_int = vm.stack[vm.sp - 1].as_int != vm.stack[vm.sp].as_int;
+        vm.stack[vm.sp - 1].as_int32 = vm.stack[vm.sp - 1].as_int32 != vm.stack[vm.sp].as_int32;
         --vm.sp;
         ++vm.ip;
         break;
     }
     case ICONST:
     {
-        vm.stack[++vm.sp].as_int = *((int32_t*) (opcode + 1));
+        vm.stack[++vm.sp].as_int32 = *((int32_t*) (opcode + 1));
         vm.ip += 5;
         break;
     }
     case ICONST_0:
     {
-        vm.stack[++vm.sp].as_int = 0;
+        vm.stack[++vm.sp].as_int32 = 0;
         ++vm.ip;
         break;
     }
     case ICONST_1:
     {
-        vm.stack[++vm.sp].as_int = 1;
+        vm.stack[++vm.sp].as_int32 = 1;
         ++vm.ip;
         break;
     }
     case IPRINT:
     {
-        printf("%d", vm.stack[vm.sp].as_int);
+        printf("%d", vm.stack[vm.sp].as_int32);
         fflush(stdout);
         --vm.sp;
         ++vm.ip;
@@ -430,7 +432,7 @@ void exec_opcode(uint8_t* opcode)
     }
     case ITOR:
     {
-        vm.stack[vm.sp].as_real = (real_t) vm.stack[vm.sp].as_int;
+        vm.stack[vm.sp].as_real = (real_t) vm.stack[vm.sp].as_int32;
         ++vm.ip;
         break;
     }
@@ -657,7 +659,7 @@ void exec_opcode(uint8_t* opcode)
     }
     case RCONST:
     {
-        vm.stack[++vm.sp].as_ulong = *((uint64_t*) (opcode + 1));
+        vm.stack[++vm.sp].as_uint64 = *((uint64_t*) (opcode + 1));
         vm.ip += 9;
         break;
     }
@@ -689,47 +691,47 @@ void exec_opcode(uint8_t* opcode)
     }
     case RTOI:
     {
-        vm.stack[vm.sp].as_int = (int32_t) vm.stack[vm.sp].as_real;
+        vm.stack[vm.sp].as_int32 = (int32_t) vm.stack[vm.sp].as_real;
         ++vm.ip;
         break;
     }
     case ALOAD:
     {
-        vm.stack[vm.sp + 1].as_ushort = vm.stack[vm.bp + *((uint16_t*) (opcode + 1))].as_ushort;
+        vm.stack[vm.sp + 1].as_uint16 = vm.stack[vm.bp + *((uint16_t*) (opcode + 1))].as_uint16;
         ++vm.sp;
         vm.ip += 3;
         break;
     }
     case ASTORE:
     {
-        vm.stack[vm.bp + *((uint16_t*) (opcode + 1))].as_ushort = vm.stack[vm.sp].as_ushort;
+        vm.stack[vm.bp + *((uint16_t*) (opcode + 1))].as_uint16 = vm.stack[vm.sp].as_uint16;
         --vm.sp;
         vm.ip += 3;
         break;
     }
     case ALOADG:
     {
-        vm.stack[vm.sp + 1].as_ushort = vm.stack[*((uint16_t*) (opcode + 1))].as_ushort;
+        vm.stack[vm.sp + 1].as_uint16 = vm.stack[*((uint16_t*) (opcode + 1))].as_uint16;
         ++vm.sp;
         vm.ip += 3;
         break;
     }
     case ASTOREG:
     {
-        vm.stack[*((uint16_t*) (opcode + 1))].as_ushort = vm.stack[vm.sp].as_ushort;
+        vm.stack[*((uint16_t*) (opcode + 1))].as_uint16 = vm.stack[vm.sp].as_uint16;
         --vm.sp;
         vm.ip += 3;
         break;
     }
     case ACONST:
     {
-        vm.stack[++vm.sp].as_short = *((uint16_t*) (opcode + 1));
+        vm.stack[++vm.sp].as_int16 = *((uint16_t*) (opcode + 1));
         vm.ip += 3;
         break;
     }
     case APRINT:
     {
-        printf("%s", &vm.data.data[vm.stack[vm.sp].as_ushort]);
+        printf("%s", &vm.data.data[vm.stack[vm.sp].as_uint16]);
         fflush(stdout);
         --vm.sp;
         ++vm.ip;
@@ -751,7 +753,7 @@ void exec_opcode(uint8_t* opcode)
 
 void vm_exec()
 {
-    while (!vm.halt)
+    while (!vm.flags.halt)
     {
         exec_opcode(vm.program.data + vm.ip);
     }
@@ -763,7 +765,7 @@ void vm_dump()
     printf("ip: %du  sp: %du bp: %du", vm.ip, vm.sp, vm.bp);
     printf("[ ");
     for (int i = vm.sp; i >= 0; i--)
-        printf("%lu ", vm.stack[i].as_ulong);
+        printf("%lu ", vm.stack[i].as_uint64);
     printf("]\n");
     printf("-- end   --\n");
 }

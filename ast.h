@@ -12,7 +12,7 @@ extern "C"
 {
 #endif
 
-typedef mirza_type_t(*eval_t)(void*);
+typedef type_t(*eval_t)(void*);
 
 struct ast_t
 {
@@ -25,8 +25,8 @@ typedef struct ast_t ast_t;
 typedef struct
 {
     ast_t* base;
-    mirza_type_t type;
-    mirza_value_t value;
+    type_t type;
+    value_t value;
 } ast_constant_t;
 
 typedef struct
@@ -96,7 +96,7 @@ typedef struct
     symbol_t* symbol;
     ast_block_t* body;
     uint16_t args;
-    mirza_type_t ret_type;
+    type_t ret_type;
 } ast_func_decl_t;
 
 typedef struct
@@ -124,11 +124,11 @@ typedef struct
     loop_t* loop;
 } ast_continue_loop_t;
 
-mirza_type_t eval(ast_t* ast);
+type_t eval(ast_t* ast);
 void halt();
 
 ast_t* ast_new();
-ast_constant_t* ast_new_constant(mirza_type_t type, mirza_value_t value);
+ast_constant_t* ast_new_constant(type_t type, value_t value);
 ast_unary_t* ast_new_unary(token_type_t op, ast_t* expr);
 ast_binary_t* ast_new_binary(token_type_t op, ast_t* lhs_expr, ast_t* rhs_expr);
 ast_print_t* ast_new_print(ast_t* expr);
@@ -137,7 +137,7 @@ ast_assign_t* ast_new_assign(symbol_t* symbol, ast_t* expr);
 ast_block_t* ast_new_block(context_t* context);
 ast_if_cond_t* ast_new_if_cond(ast_t* condition, ast_t* if_then, ast_t* if_else);
 ast_for_loop_t* ast_new_for_loop(ast_t* init, ast_t* condition, ast_t* post, ast_t* body);
-ast_func_decl_t* ast_new_func_decl(symbol_t* symbol, ast_block_t* body, uint16_t args, mirza_type_t ret_type);
+ast_func_decl_t* ast_new_func_decl(symbol_t* symbol, ast_block_t* body, uint16_t args, type_t ret_type);
 ast_func_return_t* ast_new_func_return(ast_t* expr);
 ast_func_call_t* ast_new_func_call(symbol_t* symbol, vector_t* args);
 ast_break_loop_t* ast_new_break_loop(loop_t* loop);

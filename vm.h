@@ -10,7 +10,6 @@
 enum
 {
     NOP,
-    // int32 --> todo: convert int64, or have them all ?!
     IINC,
     IDEC,
     INEG,
@@ -146,7 +145,7 @@ typedef struct
 
 extern const opcode_t OPCODES[];
 
-void vm_init(size_t stack_size, size_t program_size);
+void vm_init(size_t stack_size, size_t code_size);
 void vm_free();
 void vm_exec();
 void vm_dump();
