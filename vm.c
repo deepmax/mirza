@@ -329,7 +329,7 @@ void exec_opcode(uint8_t* opcode)
     }
     case IAND:
     {
-        vm.stack[vm.sp - 1].as_int32 = vm.stack[vm.sp - 1].as_int32 && vm.stack[vm.sp].as_int32;
+        vm.stack[vm.sp - 1].as_int32 = vm.stack[vm.sp - 1].as_int32 & vm.stack[vm.sp].as_int32;
         --vm.sp;
         ++vm.ip;
         break;
@@ -343,7 +343,7 @@ void exec_opcode(uint8_t* opcode)
     }
     case IOR:
     {
-        vm.stack[vm.sp - 1].as_int32 = vm.stack[vm.sp - 1].as_int32 || vm.stack[vm.sp].as_int32;
+        vm.stack[vm.sp - 1].as_int32 = vm.stack[vm.sp - 1].as_int32 | vm.stack[vm.sp].as_int32;
         --vm.sp;
         ++vm.ip;
         break;
