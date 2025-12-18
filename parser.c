@@ -86,12 +86,12 @@ int16_t token_prec(token_type_t token_type)
     return -1;
 }
 
-bool is_binary(token_type_t token_type)
+bool_t is_binary(token_type_t token_type)
 {
     return token_prec(token_type) > 0;
 }
 
-bool is_unary(token_type_t token_type)
+bool_t is_unary(token_type_t token_type)
 {
     for (int i = 0; i<sizeof (UNARY) / sizeof (UNARY[0]); i++)
     {
@@ -495,7 +495,7 @@ ast_t* statement()
     }
 }
 
-void parser_start(bool execute, bool dasm)
+void parser_start(bool_t execute, bool_t dasm)
 {
     vm_init(2048, 512);
 

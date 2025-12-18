@@ -35,7 +35,7 @@ void context_free(context_t* context)
     free(context);
 }
 
-bool context_is_global(context_t* context)
+bool_t context_is_global(context_t* context)
 {
     return context == global_context;
 }
@@ -63,7 +63,7 @@ symbol_t* context_add(context_t* context, const char* id, mirza_type_t type)
     return (symbol_t*) vec_append(context->symbols, new_symbol);
 }
 
-symbol_t* context_get(context_t* context, const char* id, bool local)
+symbol_t* context_get(context_t* context, const char* id, bool_t local)
 {
     for (context_t* c = context; c != NULL; c = c->parent)
     {

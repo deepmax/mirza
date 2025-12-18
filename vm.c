@@ -8,7 +8,7 @@
 
 typedef struct
 {
-    bool halt;            // If `true`, stop the running machine and exit
+    bool_t halt;            // If `true`, stop the running machine and exit
     uint32_t ip;          // Points the index of current machine instruction to execute: program[ip] or *(program + ip)
     uint32_t sp;          // Points the top element of the machine stack: stack[sp]
     uint32_t bp;          // Base index

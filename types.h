@@ -11,6 +11,8 @@ extern "C"
 #endif
 
 typedef double real_t;
+typedef bool bool_t;
+typedef char char_t;
 
 typedef enum
 {
@@ -29,9 +31,9 @@ typedef enum
 
 typedef union
 {
-    char* as_str;
+    char_t* as_str;
     uint8_t as_byte;
-    bool as_bool;
+    bool_t as_bool;
     real_t as_real;
     int16_t as_short;
     int32_t as_int;

@@ -7,7 +7,7 @@
 #include <string.h>
 
 static FILE* file;
-static bool is_stdin;
+static bool_t is_stdin;
 static char look;
 static uint32_t row;
 static uint32_t col;
@@ -288,7 +288,7 @@ token_t lexer_next()
     }
     else if (isdigit(look))
     {
-        bool has_dot = false;
+        bool_t has_dot = false;
 
         buffer_t number;
         buffer_init(&number, 32);

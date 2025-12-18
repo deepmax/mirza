@@ -73,7 +73,7 @@ typedef union
 {
     char* as_str;
     uint8_t as_byte;
-    bool as_bool;
+    bool_t as_bool;
     real_t as_real;
     int32_t as_int;
     int64_t as_long;
