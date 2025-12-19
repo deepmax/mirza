@@ -84,7 +84,18 @@ type_t eval_constant(ast_constant_t* ast)
     }
     else if (ast->type == MT_REAL)
     {
-        EMIT(RCONST, NUM64(ast->value.as_uint64));
+        if (ast->value.as_real == 0.0)
+        {
+            EMIT(RCONST_0);
+        }
+        else if (ast->value.as_real == 1.0)
+        {
+            EMIT(RCONST_1);
+        }
+        else
+        {
+            EMIT(RCONST, NUM64(ast->value.as_uint64));
+        }
     }
     else if (ast->type == MT_STR)
     {
