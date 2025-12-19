@@ -496,6 +496,36 @@ static void test_complex_nested_control(test_suite_t* suite)
     TEST_ASSERT_STR_EQ(captured_output, "201020", "should print 201020");
 }
 
+// Test 41: Bitwise AND
+static void test_bitwise_and(test_suite_t* suite)
+{
+    capture_stdout_start();
+    compile_and_run("print 5 & 3\n");
+    capture_stdout_end();
+    
+    TEST_ASSERT_STR_EQ(captured_output, "1", "should print 1 (5 & 3 = 1)");
+}
+
+// Test 42: Bitwise OR
+static void test_bitwise_or(test_suite_t* suite)
+{
+    capture_stdout_start();
+    compile_and_run("print 5 | 3\n");
+    capture_stdout_end();
+    
+    TEST_ASSERT_STR_EQ(captured_output, "7", "should print 7 (5 | 3 = 7)");
+}
+
+// Test 43: Bitwise XOR
+static void test_bitwise_xor(test_suite_t* suite)
+{
+    capture_stdout_start();
+    compile_and_run("print 5 ^ 3\n");
+    capture_stdout_end();
+    
+    TEST_ASSERT_STR_EQ(captured_output, "6", "should print 6 (5 ^ 3 = 6)");
+}
+
 int main(void)
 {
     RUN_SUITE("compiler level 1",
@@ -536,7 +566,10 @@ int main(void)
         {"variable_scope", test_variable_scope},
         {"multiple_function_calls", test_multiple_function_calls},
         {"for_with_step", test_for_with_step},
-        {"complex_nested_control", test_complex_nested_control}
+        {"complex_nested_control", test_complex_nested_control},
+        {"bitwise_and", test_bitwise_and},
+        {"bitwise_or", test_bitwise_or},
+        {"bitwise_xor", test_bitwise_xor}
     );
     
     printf("All compiler level 1 tests passed!\n");

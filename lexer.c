@@ -223,6 +223,18 @@ token_t lexer_next()
     {
         token.type = TK_MOD;
     }
+    else if (look == '|')
+    {
+        token.type = TK_OR_BIT;
+    }
+    else if (look == '&')
+    {
+        token.type = TK_AND_BIT;
+    }
+    else if (look == '^')
+    {
+        token.type = TK_XOR_BIT;
+    }
     else if (look == '\\')
     {
         token.type = TK_BACKSLASH;

@@ -35,8 +35,10 @@ const opcode_t OPCODES[] = {
     {IMOD, 0, "imod"},
     {IMUL, 0, "imul"},
     {IAND, 0, "iand"},
-    {IXOR, 0, "ixor"},
     {IOR, 0, "ior"},
+    {IBXOR, 0, "ibxor"},
+    {IBOR, 0, "ibor"},
+    {IBAND, 0, "iband"},
     {ISHL, 0, "ishl"},
     {ISHR, 0, "ishr"},
     {IGT, 0, "igt"},
@@ -329,21 +331,35 @@ void exec_opcode(uint8_t* opcode)
     }
     case IAND:
     {
-        vm.stack[vm.sp - 1].as_int32 = vm.stack[vm.sp - 1].as_int32 & vm.stack[vm.sp].as_int32;
-        --vm.sp;
-        ++vm.ip;
-        break;
-    }
-    case IXOR:
-    {
-        vm.stack[vm.sp - 1].as_int32 = vm.stack[vm.sp - 1].as_int32 ^ vm.stack[vm.sp].as_int32;
+        vm.stack[vm.sp - 1].as_int32 = vm.stack[vm.sp - 1].as_int32 && vm.stack[vm.sp].as_int32;
         --vm.sp;
         ++vm.ip;
         break;
     }
     case IOR:
     {
+        vm.stack[vm.sp - 1].as_int32 = vm.stack[vm.sp - 1].as_int32 || vm.stack[vm.sp].as_int32;
+        --vm.sp;
+        ++vm.ip;
+        break;
+    }
+    case IBXOR:
+    {
+        vm.stack[vm.sp - 1].as_int32 = vm.stack[vm.sp - 1].as_int32 ^ vm.stack[vm.sp].as_int32;
+        --vm.sp;
+        ++vm.ip;
+        break;
+    }
+    case IBOR:
+    {
         vm.stack[vm.sp - 1].as_int32 = vm.stack[vm.sp - 1].as_int32 | vm.stack[vm.sp].as_int32;
+        --vm.sp;
+        ++vm.ip;
+        break;
+    }
+    case IBAND:
+    {
+        vm.stack[vm.sp - 1].as_int32 = vm.stack[vm.sp - 1].as_int32 & vm.stack[vm.sp].as_int32;
         --vm.sp;
         ++vm.ip;
         break;

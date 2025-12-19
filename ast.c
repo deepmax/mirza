@@ -122,6 +122,15 @@ type_t eval_binary(ast_binary_t* ast)
         case TK_GTE:
             EMIT(IGE);
             break;
+        case TK_AND_BIT:
+            EMIT(IBAND);
+            break;
+        case TK_OR_BIT:
+            EMIT(IBOR);
+            break;
+        case TK_XOR_BIT:
+            EMIT(IBXOR);
+            break;
         case TK_AND:
             EMIT(IAND);
             break;

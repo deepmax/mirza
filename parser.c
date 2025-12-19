@@ -41,6 +41,9 @@ const bin_op_prec_t BIN_OP_PREC[] = {
     {TK_GTE, 70},
     {TK_EQ, 60},
     {TK_NE, 60},
+    {TK_AND_BIT, 55},
+    {TK_XOR_BIT, 54},
+    {TK_OR_BIT, 53},
     {TK_AND, 50},
     {TK_OR, 40}
 };
