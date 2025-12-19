@@ -58,6 +58,7 @@ type_t eval_unary(ast_unary_t* ast)
             EMIT(INOT);
             break;
         default:
+            ;
         }
         return out;
     }
@@ -71,6 +72,7 @@ type_t eval_unary(ast_unary_t* ast)
             EMIT(RNEG);
             break;
         default:
+            ;
         }
         return out;
     }
@@ -138,6 +140,7 @@ type_t eval_binary(ast_binary_t* ast)
             EMIT(IOR);
             break;
         default:
+            ;
         }
         return MT_INT32;
     }
@@ -173,6 +176,7 @@ type_t eval_binary(ast_binary_t* ast)
             EMIT(RGT);
             break;
         default:
+            ;
         }
         return MT_REAL;
     }

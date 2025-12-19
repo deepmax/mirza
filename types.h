@@ -30,7 +30,7 @@ typedef enum
     MT_UINT64,
     MT_REAL,
     MT_FUNC,
-    MT_LIST,
+    MT_ARRAY,
 } type_t;
 
 typedef union
@@ -57,6 +57,30 @@ typedef enum
     MB_CLASS,
     MB_GLOBAL,
 } block_t;
+
+
+typedef struct
+{
+    const char* name;
+    const type_t type;
+    // const type_t sub_type;
+} builtin_datatype_t;
+
+static const builtin_datatype_t BUILTIN_DATATYPES[] = {
+    {"i8", MT_INT8},
+    {"i16", MT_INT16},
+    {"i32", MT_INT32},
+    {"i64", MT_INT64},
+    {"u8", MT_UINT8},
+    {"u16", MT_UINT16},
+    {"u32", MT_UINT32},
+    {"u64", MT_UINT64},
+    {"str", MT_STR},
+    {"real", MT_REAL},
+    {"bool", MT_BOOL},
+    {"void", MT_VOID},
+    {"array", MT_ARRAY},
+};
 
 #ifdef __cplusplus
 }

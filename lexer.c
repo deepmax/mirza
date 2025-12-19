@@ -38,20 +38,7 @@ static const keyword_t KEYWORDS[] = {
     {"and", TK_AND},
     {"or", TK_OR},
     {"not", TK_NOT},
-    {"i8", TK_INT8},
-    {"i16", TK_INT16},
-    {"i32", TK_INT32},
-    {"i64", TK_INT64},
-    {"u8", TK_UINT8},
-    {"u16", TK_UINT16},
-    {"u32", TK_UINT32},
-    {"u64", TK_UINT64},
-    {"str", TK_STR},
-    {"real", TK_REAL},
-    {"bool", TK_BOOL},
-    {"void", TK_VOID},
     {"extern", TK_EXTERN},
-    {"__line__", TK_LINE},
 };
 
 void lexer_init_file(const char* filename)

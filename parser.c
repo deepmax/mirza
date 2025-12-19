@@ -7,6 +7,7 @@
 #include "context.h"
 #include "panic.h"
 #include <stdlib.h>
+#include <string.h>
 #include <stdio.h>
 
 static token_t look;
@@ -120,34 +121,35 @@ char* peek_ident()
     return look.value.as_str;
 }
 
+type_t peek_data_type()
+{
+    if (look.type != TK_IDENT)
+        return MT_UNKNOWN;
+
+    for (int i = 0; i < sizeof (BUILTIN_DATATYPES) / sizeof (BUILTIN_DATATYPES[0]); i++)
+    {
+        if (strcmp(BUILTIN_DATATYPES[i].name, look.value.as_str) == 0)
+            return BUILTIN_DATATYPES[i].type;
+    }
+
+    return MT_UNKNOWN;
+}
+
 type_t data_type()
 {
     match(TK_COLON);
 
-    type_t t = MT_UNKNOWN;
+    type_t t = peek_data_type();
 
-    switch (look.type)
+    if (t != MT_UNKNOWN)
     {
-        case TK_INT8: t = MT_INT8; break;
-        case TK_INT16: t = MT_INT16; break;
-        case TK_INT32: t = MT_INT32; break;
-        case TK_INT64: t = MT_INT64; break;
-        case TK_UINT8: t = MT_UINT8; break;
-        case TK_UINT16: t = MT_UINT16; break;
-        case TK_UINT32: t = MT_UINT32; break;
-        case TK_UINT64: t = MT_UINT64; break;
-        case TK_STR: t = MT_STR; break;
-        case TK_REAL: t = MT_REAL; break;
-        case TK_BOOL: t = MT_BOOL; break;
-        case TK_VOID: t = MT_VOID; break;
-        default:
-            panic("Unknown data type.");
-            return MT_UNKNOWN;
+        match(look.type);
+        return t;
     }
 
-    match(look.type);
+    panic("Uknown data type.");
 
-    return t;
+    return MT_UNKNOWN;
 }
 
 ast_t* assign(const char* id)
@@ -265,14 +267,6 @@ ast_t* factor()
         value.as_int32 = 0;
         node = (ast_t*) ast_new_constant(MT_INT32, value);
     }
-    else if (look.type == TK_LINE)
-    {
-        uint32_t line = look.row;
-        match(TK_LINE);
-        value_t value;
-        value.as_int32 = line;
-        node = (ast_t*) ast_new_constant(MT_INT32, value);
-    }
     else if (look.type == TK_INT32)
     {
         value_t value;
@@ -379,8 +373,6 @@ ast_t* func_decl()
         match(TK_IDENT);
         
         param->type = data_type();
-
-        // printf("%s, param type: %d\n", param->id, param->type);
 
         vec_append(params, param);
 

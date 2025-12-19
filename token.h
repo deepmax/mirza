@@ -30,7 +30,6 @@ typedef enum
     TK_READ,
     TK_QUIT,
     TK_EXTERN,
-    TK_LINE,
     TK_COMMA,
     TK_COLON,
     TK_SEMICOLON,
@@ -81,6 +80,7 @@ typedef enum
 
 typedef union
 {
+
     char* as_str;
     uint8_t as_byte;
     bool_t as_bool;
