@@ -5,11 +5,22 @@
 
 #define EMIT(...) do{uint8_t b[] = { __VA_ARGS__ }; vm_code_emit(b, sizeof(b) / sizeof(b[0]));}while(0)
 #define CODE(i, ...) do{uint8_t b[] = { __VA_ARGS__ }; vm_code_set(i, b, sizeof(b) / sizeof(b[0]));}while(0)
-//#define DATA(...) do{uint8_t b[] = { __VA_ARGS__ }; vm_data_emit(b, sizeof(b) / sizeof(b[0]));}while(0)
+// #define DATA(...) do{uint8_t b[] = { __VA_ARGS__ }; vm_data_emit(b, sizeof(b) / sizeof(b[0]));}while(0)
 
 enum
 {
     NOP,
+    DUP,
+    DROP,
+    ALLC,
+    SWAP,
+    PROC,
+    CALL,
+    RET,
+    JNZ,
+    JEZ,
+    JMP,
+    HALT,
     IINC,
     IDEC,
     INEG,
@@ -22,9 +33,9 @@ enum
     IMUL,
     IAND,
     IOR,
-    IBAND,
-    IBOR,
     IBXOR,
+    IBOR,
+    IBAND,
     ISHL,
     ISHR,
     IGT,
@@ -37,15 +48,15 @@ enum
     // ISTORE,
     // ILOADG,
     // ISTOREG,
+    UCONST,
     ICONST,
     ICONST_0,
     ICONST_1,
     IPRINT,
-    ITOR,
     ICAST,
     ILOAD_T,
     ISTORE_T,
-    UCONST,
+    ITOR,
 
     // real
     RINC,
@@ -88,35 +99,17 @@ enum
     RCONST_PI,
     RPRINT,
     RTOI,
-
     ALOAD,
     ASTORE,
     ALOADG,
     ASTOREG,
     ACONST,
     APRINT,
-
     // XLOAD
     // XLOADG
     // XSTORE
     // XSTOREG
-
     NPRINT,
-
-    DUP,
-    DROP,
-    ALLC,
-    SWAP,
-
-    PROC,
-    CALL,
-    RET,
-
-    JNZ,
-    JEZ,
-    JMP,
-
-    HALT,
 };
 
 #define NUM64(X) \

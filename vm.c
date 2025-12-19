@@ -23,8 +23,22 @@ typedef struct
 
 static vm_t vm;
 
+
+// NOTE: KEEP THE ORDER AS SAME AS OPCODE ENUM
+// OTHERWISE THE DASM WILL BE WRONG
 const opcode_t OPCODES[] = {
     {NOP, 0, "nop"},
+    {DUP, 0, "dup"},
+    {DROP, 0, "drop"},
+    {ALLC, 2, "allc"},
+    {SWAP, 0, "swap"},
+    {PROC, 4, "proc"},
+    {CALL, 2, "call"},
+    {RET, 0, "ret"},
+    {JNZ, 2, "jnz"},
+    {JEZ, 2, "jez"},
+    {JMP, 2, "jmp"},
+    {HALT, 0, "halt"},
     {IINC, 0, "iinc"},
     {IDEC, 0, "idec"},
     {INEG, 0, "ineg"},
@@ -52,15 +66,15 @@ const opcode_t OPCODES[] = {
     // {ISTORE, 2, "istore"},
     // {ILOADG, 2, "iloadg"},
     // {ISTOREG, 2, "istoreg"},
+    {UCONST, 8, "uconst"},
     {ICONST, 8, "iconst"},
     {ICONST_0, 0, "iconst_0"},
     {ICONST_1, 0, "iconst_1"},
     {IPRINT, 0, "iprint"},
-    {ITOR, 0, "itor"},
     {ICAST, 2, "icast"},
     {ILOAD_T, 4, "iload_t"},
     {ISTORE_T, 4, "istore_t"},
-    {UCONST, 8, "uconst"},
+    {ITOR, 0, "itor"},
     {RINC, 0, "rinc"},
     {RDEC, 0, "rdec"},
     {RNEG, 0, "rneg"},
@@ -107,18 +121,11 @@ const opcode_t OPCODES[] = {
     {ASTOREG, 2, "astoreg"},
     {ACONST, 2, "aconst"},
     {APRINT, 0, "aprint"},
+    // XLOAD
+    // XLOADG
+    // XSTORE
+    // XSTOREG
     {NPRINT, 0, "nprint"},
-    {DUP, 0, "dup"},
-    {DROP, 0, "drop"},
-    {ALLC, 2, "allc"},
-    {SWAP, 0, "swap"},
-    {PROC, 4, "proc"},
-    {CALL, 2, "call"},
-    {RET, 0, "ret"},
-    {JNZ, 2, "jnz"},
-    {JEZ, 2, "jez"},
-    {JMP, 2, "jmp"},
-    {HALT, 0, "halt"},
 };
 
 void vm_init(size_t stack_size, size_t code_size)
@@ -368,7 +375,6 @@ void exec_opcode(uint8_t* opcode)
     }
     case IADD:
     {
-        // Compiler guarantees both operands are same type - operate on int64
         vm.stack[vm.sp - 1].as_int64 = vm.stack[vm.sp - 1].as_int64 + vm.stack[vm.sp].as_int64;
         --vm.sp;
         ++vm.ip;
@@ -495,8 +501,7 @@ void exec_opcode(uint8_t* opcode)
     }
     case UCONST:
     {
-        // Store unsigned constant as int64 for unified operations
-        vm.stack[++vm.sp].as_int64 = (int64_t)*((uint64_t*)(opcode + 1));
+        vm.stack[++vm.sp].as_uint64 = (uint64_t)*((uint64_t*)(opcode + 1));
         vm.ip += 9;
         break;
     }
@@ -520,7 +525,6 @@ void exec_opcode(uint8_t* opcode)
     }
     case IPRINT:
     {
-        // Print as int64 (operations normalize to int64)
         printf("%" PRId64, vm.stack[vm.sp].as_int64);
         fflush(stdout);
         --vm.sp;
@@ -903,18 +907,22 @@ void vm_dasm()
     {
         opcode_t opcode = OPCODES[vm.program.data[i]];
 
+        // int opcode_index = -1;
+        // for (int j = 0; j<sizeof (OPCODES) / sizeof (OPCODES[0]); j++)
+        // {
+        //     if (OPCODES[j].code == vm.program.data[i])
+        //     {
+        //         opcode_index = j;
+        //         break;
+        //     }
+        // }
+        // opcode_t opcode = OPCODES[opcode_index];
+
         printf("%lx\t %s", i, opcode.name);
 
-        if (opcode.arg_size == 0)
-        {
-            printf("\n");
-        }
-        else
-        {
-            for (int a = 0; a < opcode.arg_size; a++)
-                printf(" 0x%x", (vm.program.data[i + a + 1] & 0xFF));
-            printf("\n");
-        }
+        for (int a = 0; a < opcode.arg_size; a++)
+            printf(" 0x%x", (vm.program.data[i + a + 1] & 0xFF));
+        printf("\n");
 
         i += opcode.arg_size;
     }

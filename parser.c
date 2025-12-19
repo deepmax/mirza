@@ -257,22 +257,22 @@ ast_t* factor()
     {
         match(TK_TRUE);
         value_t value;
-        value.as_int32 = 1;
-        node = (ast_t*) ast_new_constant(MT_INT32, value);
+        value.as_int64 = 1;
+        node = (ast_t*) ast_new_constant(MT_INT64, value);
     }
     else if (look.type == TK_FALSE)
     {
         match(TK_FALSE);
         value_t value;
-        value.as_int32 = 0;
-        node = (ast_t*) ast_new_constant(MT_INT32, value);
+        value.as_int64 = 0;
+        node = (ast_t*) ast_new_constant(MT_INT64, value);
     }
-    else if (look.type == TK_INT32)
+    else if (look.type == TK_INT64)
     {
         value_t value;
-        value.as_int32 = look.value.as_int;
-        match(TK_INT32);
-        node = (ast_t*) ast_new_constant(MT_INT32, value);
+        value.as_int64 = look.value.as_int;
+        match(TK_INT64);
+        node = (ast_t*) ast_new_constant(MT_INT64, value);
     }
     else if (look.type == TK_REAL)
     {

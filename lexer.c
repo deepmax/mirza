@@ -334,7 +334,7 @@ token_t lexer_next()
         else
         {
             uint8_t* end = number.data + number.used - 1;
-            token.type = TK_INT32;
+            token.type = TK_INT64;
             token.value.as_int = strtol((char*) number.data, (char**) &end, 10);
         }
     }
