@@ -111,7 +111,6 @@ static void compile_and_run(const char* code)
     unlink(tmp_filename);
 }
 
-// Test 1: Simple integer constant
 static void test_simple_constant(test_suite_t* suite)
 {
     capture_stdout_start();
@@ -121,7 +120,6 @@ static void test_simple_constant(test_suite_t* suite)
     TEST_ASSERT_STR_EQ(captured_output, "42", "should print 42");
 }
 
-// Test 2: Simple arithmetic - addition
 static void test_simple_addition(test_suite_t* suite)
 {
     capture_stdout_start();
@@ -131,7 +129,6 @@ static void test_simple_addition(test_suite_t* suite)
     TEST_ASSERT_STR_EQ(captured_output, "30", "should print 30");
 }
 
-// Test 3: Simple arithmetic - subtraction
 static void test_simple_subtraction(test_suite_t* suite)
 {
     capture_stdout_start();
@@ -141,7 +138,6 @@ static void test_simple_subtraction(test_suite_t* suite)
     TEST_ASSERT_STR_EQ(captured_output, "30", "should print 30");
 }
 
-// Test 4: Simple arithmetic - multiplication
 static void test_simple_multiplication(test_suite_t* suite)
 {
     capture_stdout_start();
@@ -151,7 +147,6 @@ static void test_simple_multiplication(test_suite_t* suite)
     TEST_ASSERT_STR_EQ(captured_output, "42", "should print 42");
 }
 
-// Test 5: Simple arithmetic - division
 static void test_simple_division(test_suite_t* suite)
 {
     capture_stdout_start();
@@ -161,7 +156,6 @@ static void test_simple_division(test_suite_t* suite)
     TEST_ASSERT_STR_EQ(captured_output, "5", "should print 5");
 }
 
-// Test 6: Simple arithmetic - modulo
 static void test_simple_modulo(test_suite_t* suite)
 {
     capture_stdout_start();
@@ -171,7 +165,6 @@ static void test_simple_modulo(test_suite_t* suite)
     TEST_ASSERT_STR_EQ(captured_output, "2", "should print 2");
 }
 
-// Test 7: Variable declaration and assignment
 static void test_variable_declaration(test_suite_t* suite)
 {
     capture_stdout_start();
@@ -181,7 +174,6 @@ static void test_variable_declaration(test_suite_t* suite)
     TEST_ASSERT_STR_EQ(captured_output, "42", "should print 42");
 }
 
-// Test 8: Variable reassignment
 static void test_variable_reassignment(test_suite_t* suite)
 {
     capture_stdout_start();
@@ -191,7 +183,6 @@ static void test_variable_reassignment(test_suite_t* suite)
     TEST_ASSERT_STR_EQ(captured_output, "20", "should print 20");
 }
 
-// Test 9: Multiple variables
 static void test_multiple_variables(test_suite_t* suite)
 {
     capture_stdout_start();
@@ -201,7 +192,6 @@ static void test_multiple_variables(test_suite_t* suite)
     TEST_ASSERT_STR_EQ(captured_output, "15", "should print 15");
 }
 
-// Test 10: Complex arithmetic expression
 static void test_complex_arithmetic(test_suite_t* suite)
 {
     capture_stdout_start();
@@ -211,7 +201,6 @@ static void test_complex_arithmetic(test_suite_t* suite)
     TEST_ASSERT_STR_EQ(captured_output, "14", "should respect operator precedence (2 + 12 = 14)");
 }
 
-// Test 11: Parentheses in expressions
 static void test_parentheses(test_suite_t* suite)
 {
     capture_stdout_start();
@@ -221,7 +210,6 @@ static void test_parentheses(test_suite_t* suite)
     TEST_ASSERT_STR_EQ(captured_output, "20", "should respect parentheses ((2+3)*4 = 20)");
 }
 
-// Test 12: Comparison operators - less than
 static void test_comparison_lt(test_suite_t* suite)
 {
     capture_stdout_start();
@@ -231,7 +219,6 @@ static void test_comparison_lt(test_suite_t* suite)
     TEST_ASSERT_STR_EQ(captured_output, "1", "should print 1 (true)");
 }
 
-// Test 13: Comparison operators - greater than
 static void test_comparison_gt(test_suite_t* suite)
 {
     capture_stdout_start();
@@ -241,7 +228,6 @@ static void test_comparison_gt(test_suite_t* suite)
     TEST_ASSERT_STR_EQ(captured_output, "1", "should print 1 (true)");
 }
 
-// Test 14: Comparison operators - equality
 static void test_comparison_eq(test_suite_t* suite)
 {
     capture_stdout_start();
@@ -251,7 +237,6 @@ static void test_comparison_eq(test_suite_t* suite)
     TEST_ASSERT_STR_EQ(captured_output, "1", "should print 1 (true)");
 }
 
-// Test 15: Comparison operators - inequality
 static void test_comparison_ne(test_suite_t* suite)
 {
     capture_stdout_start();
@@ -261,7 +246,6 @@ static void test_comparison_ne(test_suite_t* suite)
     TEST_ASSERT_STR_EQ(captured_output, "1", "should print 1 (true)");
 }
 
-// Test 16: If statement - true condition
 static void test_if_true(test_suite_t* suite)
 {
     capture_stdout_start();
@@ -271,7 +255,6 @@ static void test_if_true(test_suite_t* suite)
     TEST_ASSERT_STR_EQ(captured_output, "42", "should print 42");
 }
 
-// Test 17: If statement - false condition
 static void test_if_false(test_suite_t* suite)
 {
     capture_stdout_start();
@@ -281,7 +264,6 @@ static void test_if_false(test_suite_t* suite)
     TEST_ASSERT_STR_EQ(captured_output, "", "should print nothing");
 }
 
-// Test 18: If-else statement
 static void test_if_else(test_suite_t* suite)
 {
     capture_stdout_start();
@@ -291,10 +273,6 @@ static void test_if_else(test_suite_t* suite)
     TEST_ASSERT_STR_EQ(captured_output, "2", "should print 2");
 }
 
-// Test 19:
-
-
-// Test 20: For loop - simple
 static void test_for_simple(test_suite_t* suite)
 {
     capture_stdout_start();
@@ -304,7 +282,6 @@ static void test_for_simple(test_suite_t* suite)
     TEST_ASSERT_STR_EQ(captured_output, "012", "should print 012");
 }
 
-// Test 21: Break statement
 static void test_break_statement(test_suite_t* suite)
 {
     capture_stdout_start();
@@ -314,7 +291,6 @@ static void test_break_statement(test_suite_t* suite)
     TEST_ASSERT_STR_EQ(captured_output, "012", "should print 012 and break");
 }
 
-// Test 22: Continue statement
 static void test_continue_statement(test_suite_t* suite)
 {
     capture_stdout_start();
@@ -324,7 +300,6 @@ static void test_continue_statement(test_suite_t* suite)
     TEST_ASSERT_STR_EQ(captured_output, "0134", "should skip 2");
 }
 
-// Test 23: Simple function - no parameters
 static void test_function_no_params(test_suite_t* suite)
 {
     capture_stdout_start();
@@ -334,7 +309,6 @@ static void test_function_no_params(test_suite_t* suite)
     TEST_ASSERT_STR_EQ(captured_output, "42", "should print 42");
 }
 
-// Test 24: Simple function - with parameters
 static void test_function_with_params(test_suite_t* suite)
 {
     capture_stdout_start();
@@ -344,7 +318,6 @@ static void test_function_with_params(test_suite_t* suite)
     TEST_ASSERT_STR_EQ(captured_output, "8", "should print 8");
 }
 
-// Test 25: Function with return value
 static void test_function_return(test_suite_t* suite)
 {
     capture_stdout_start();
@@ -354,7 +327,6 @@ static void test_function_return(test_suite_t* suite)
     TEST_ASSERT_STR_EQ(captured_output, "36", "should print 36");
 }
 
-// Test 26: Recursive function - factorial
 static void test_recursive_factorial(test_suite_t* suite)
 {
     capture_stdout_start();
@@ -364,7 +336,6 @@ static void test_recursive_factorial(test_suite_t* suite)
     TEST_ASSERT_STR_EQ(captured_output, "120", "should print 120 (5!)");
 }
 
-// Test 27: Nested if statements
 static void test_nested_if(test_suite_t* suite)
 {
     capture_stdout_start();
@@ -374,7 +345,6 @@ static void test_nested_if(test_suite_t* suite)
     TEST_ASSERT_STR_EQ(captured_output, "42", "should print 42");
 }
 
-// Test 28: Nested loops
 static void test_nested_loops(test_suite_t* suite)
 {
     capture_stdout_start();
@@ -384,7 +354,6 @@ static void test_nested_loops(test_suite_t* suite)
     TEST_ASSERT_STR_EQ(captured_output, "011011", "should print 011011");
 }
 
-// Test 29: Logical AND
 static void test_logical_and(test_suite_t* suite)
 {
     capture_stdout_start();
@@ -394,7 +363,6 @@ static void test_logical_and(test_suite_t* suite)
     TEST_ASSERT_STR_EQ(captured_output, "1", "should print 1 (true)");
 }
 
-// Test 30: Logical OR
 static void test_logical_or(test_suite_t* suite)
 {
     capture_stdout_start();
@@ -404,7 +372,6 @@ static void test_logical_or(test_suite_t* suite)
     TEST_ASSERT_STR_EQ(captured_output, "1", "should print 1 (true)");
 }
 
-// Test 31: Unary minus
 static void test_unary_minus(test_suite_t* suite)
 {
     capture_stdout_start();
@@ -414,7 +381,6 @@ static void test_unary_minus(test_suite_t* suite)
     TEST_ASSERT_STR_EQ(captured_output, "-5", "should print -5");
 }
 
-// Test 32: String literal
 static void test_string_literal(test_suite_t* suite)
 {
     capture_stdout_start();
@@ -424,7 +390,6 @@ static void test_string_literal(test_suite_t* suite)
     TEST_ASSERT_STR_EQ(captured_output, "hello", "should print hello");
 }
 
-// Test 33: Multiple print statements
 static void test_multiple_prints(test_suite_t* suite)
 {
     capture_stdout_start();
@@ -434,7 +399,6 @@ static void test_multiple_prints(test_suite_t* suite)
     TEST_ASSERT_STR_EQ(captured_output, "123", "should print 123");
 }
 
-// Test 34: Complex expression with all operators
 static void test_complex_expression(test_suite_t* suite)
 {
     capture_stdout_start();
@@ -444,7 +408,6 @@ static void test_complex_expression(test_suite_t* suite)
     TEST_ASSERT_STR_EQ(captured_output, "27", "should print 27");
 }
 
-// Test 35: Function call in expression
 static void test_function_in_expression(test_suite_t* suite)
 {
     capture_stdout_start();
@@ -454,7 +417,6 @@ static void test_function_in_expression(test_suite_t* suite)
     TEST_ASSERT_STR_EQ(captured_output, "20", "should print 20");
 }
 
-// Test 36: Variable scope in function
 static void test_variable_scope(test_suite_t* suite)
 {
     capture_stdout_start();
@@ -464,7 +426,6 @@ static void test_variable_scope(test_suite_t* suite)
     TEST_ASSERT_STR_EQ(captured_output, "2010", "should print 2010");
 }
 
-// Test 37: Multiple function calls
 static void test_multiple_function_calls(test_suite_t* suite)
 {
     capture_stdout_start();
@@ -474,9 +435,6 @@ static void test_multiple_function_calls(test_suite_t* suite)
     TEST_ASSERT_STR_EQ(captured_output, "234", "should print 234");
 }
 
-// Test 38: ....
-
-// Test 39: For loop with step
 static void test_for_with_step(test_suite_t* suite)
 {
     capture_stdout_start();
@@ -486,7 +444,6 @@ static void test_for_with_step(test_suite_t* suite)
     TEST_ASSERT_STR_EQ(captured_output, "02468", "should print 02468");
 }
 
-// Test 40: Complex nested control flow
 static void test_complex_nested_control(test_suite_t* suite)
 {
     capture_stdout_start();
@@ -496,7 +453,6 @@ static void test_complex_nested_control(test_suite_t* suite)
     TEST_ASSERT_STR_EQ(captured_output, "201020", "should print 201020");
 }
 
-// Test 41: Bitwise AND
 static void test_bitwise_and(test_suite_t* suite)
 {
     capture_stdout_start();
@@ -506,7 +462,6 @@ static void test_bitwise_and(test_suite_t* suite)
     TEST_ASSERT_STR_EQ(captured_output, "1", "should print 1 (5 & 3 = 1)");
 }
 
-// Test 42: Bitwise OR
 static void test_bitwise_or(test_suite_t* suite)
 {
     capture_stdout_start();
@@ -516,7 +471,6 @@ static void test_bitwise_or(test_suite_t* suite)
     TEST_ASSERT_STR_EQ(captured_output, "7", "should print 7 (5 | 3 = 7)");
 }
 
-// Test 43: Bitwise XOR
 static void test_bitwise_xor(test_suite_t* suite)
 {
     capture_stdout_start();
