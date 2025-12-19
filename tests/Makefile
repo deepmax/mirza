@@ -16,6 +16,10 @@ SOURCE_FILES = ../vector.c ../list.c ../buffer.c
 COMPILER_SOURCES = ../ast.c ../buffer.c ../context.c ../jump.c ../lexer.c ../list.c ../panic.c ../parser.c ../vector.c ../vm.c
 COMPILER_OBJECTS = $(patsubst ../%.c, $(BUILD)/%.o, $(COMPILER_SOURCES))
 
+# Test helper source
+TEST_HELPER_SOURCES = tests.c
+TEST_HELPER_OBJECTS = $(patsubst %.c, $(BUILD)/%.o, $(TEST_HELPER_SOURCES))
+
 default: test-all
 
 # Build all test executables
@@ -76,10 +80,19 @@ $(BUILD)/test_buffer: test_buffer.c $(BUILD)/buffer.o
 	mkdir -p $(BUILD)
 	$(CC) $(CFLAGS) $< $(BUILD)/buffer.o $(LIBS) -o $@
 
-# Build compiler test executable
-$(BUILD)/test_lvl1: test_lvl1.c $(COMPILER_OBJECTS)
+# Build test helper object
+$(BUILD)/tests.o: tests.c tests.h
 	mkdir -p $(BUILD)
-	$(CC) $(CFLAGS) $< $(COMPILER_OBJECTS) $(LIBS) -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
+
+# Build compiler test executables
+$(BUILD)/test_lvl1: test_lvl1.c $(COMPILER_OBJECTS) $(BUILD)/tests.o
+	mkdir -p $(BUILD)
+	$(CC) $(CFLAGS) $< $(COMPILER_OBJECTS) $(BUILD)/tests.o $(LIBS) -o $@
+
+$(BUILD)/test_lvl2: test_lvl2.c $(COMPILER_OBJECTS) $(BUILD)/tests.o
+	mkdir -p $(BUILD)
+	$(CC) $(CFLAGS) $< $(COMPILER_OBJECTS) $(BUILD)/tests.o $(LIBS) -o $@
 
 # Run all tests
 test-all: all
@@ -122,6 +135,9 @@ test-buffer: $(BUILD)/test_buffer
 
 test-lvl1: $(BUILD)/test_lvl1
 	$(BUILD)/test_lvl1
+
+test-lvl2: $(BUILD)/test_lvl2
+	$(BUILD)/test_lvl2
 
 # Prevent make from trying to build arguments as targets
 %:

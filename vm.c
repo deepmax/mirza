@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <math.h>
+#include <inttypes.h>
 
 typedef struct
 {
@@ -47,15 +48,19 @@ const opcode_t OPCODES[] = {
     {ILE, 0, "ile"},
     {IEQ, 0, "ieq"},
     {INQ, 0, "inq"},
-    {ILOAD, 2, "iload"},
-    {ISTORE, 2, "istore"},
-    {ILOADG, 2, "iloadg"},
-    {ISTOREG, 2, "istoreg"},
-    {ICONST, 4, "iconst"},
+    // {ILOAD, 2, "iload"},
+    // {ISTORE, 2, "istore"},
+    // {ILOADG, 2, "iloadg"},
+    // {ISTOREG, 2, "istoreg"},
+    {ICONST, 8, "iconst"},
     {ICONST_0, 0, "iconst_0"},
     {ICONST_1, 0, "iconst_1"},
     {IPRINT, 0, "iprint"},
     {ITOR, 0, "itor"},
+    {ICAST, 2, "icast"},
+    {ILOAD_T, 4, "iload_t"},
+    {ISTORE_T, 4, "istore_t"},
+    {UCONST, 8, "uconst"},
     {RINC, 0, "rinc"},
     {RDEC, 0, "rdec"},
     {RNEG, 0, "rneg"},
@@ -133,6 +138,73 @@ void vm_free()
     free(vm.stack);
     buffer_free(&vm.data);
     buffer_free(&vm.program);
+}
+
+// Helper function to load integer value from stack by type
+static void iload_value(value_t* dest, value_t* src, type_t type)
+{
+    switch (type) {
+        case MT_INT8:  dest->as_int64 = (int64_t)src->as_int8; break;
+        case MT_INT16: dest->as_int64 = (int64_t)src->as_int16; break;
+        case MT_INT32: dest->as_int64 = (int64_t)src->as_int32; break;
+        case MT_INT64: dest->as_int64 = src->as_int64; break;
+        case MT_UINT8:  dest->as_int64 = (int64_t)src->as_uint8; break;
+        case MT_UINT16: dest->as_int64 = (int64_t)src->as_uint16; break;
+        case MT_UINT32: dest->as_int64 = (int64_t)src->as_uint32; break;
+        case MT_UINT64: dest->as_int64 = (int64_t)src->as_uint64; break;
+        default: break;
+    }
+}
+
+// Helper function to store integer value to stack by type
+static void istore_value(value_t* dest, value_t* src, type_t type)
+{
+    switch (type) {
+        case MT_INT8:  dest->as_int8 = (int8_t)src->as_int64; break;
+        case MT_INT16: dest->as_int16 = (int16_t)src->as_int64; break;
+        case MT_INT32: dest->as_int32 = (int32_t)src->as_int64; break;
+        case MT_INT64: dest->as_int64 = src->as_int64; break;
+        case MT_UINT8:  dest->as_uint8 = (uint8_t)src->as_int64; break;
+        case MT_UINT16: dest->as_uint16 = (uint16_t)src->as_int64; break;
+        case MT_UINT32: dest->as_uint32 = (uint32_t)src->as_int64; break;
+        case MT_UINT64: dest->as_uint64 = (uint64_t)src->as_int64; break;
+        default: break;
+    }
+}
+
+// Helper function to perform integer type conversion
+static void icast_value(value_t* val, type_t from, type_t to)
+{
+    if (from == to) return;
+    
+    int64_t temp_signed;
+    uint64_t temp_unsigned;
+    
+    // Extract value from source type
+    switch (from) {
+        case MT_INT8:  temp_signed = (int64_t)val->as_int8; break;
+        case MT_INT16: temp_signed = (int64_t)val->as_int16; break;
+        case MT_INT32: temp_signed = (int64_t)val->as_int32; break;
+        case MT_INT64: temp_signed = val->as_int64; break;
+        case MT_UINT8:  temp_unsigned = (uint64_t)val->as_uint8; break;
+        case MT_UINT16: temp_unsigned = (uint64_t)val->as_uint16; break;
+        case MT_UINT32: temp_unsigned = (uint64_t)val->as_uint32; break;
+        case MT_UINT64: temp_unsigned = val->as_uint64; break;
+        default: return;
+    }
+    
+    // Write value to target type
+    switch (to) {
+        case MT_INT8:  val->as_int8 = (int8_t)(from >= MT_UINT8 ? (int64_t)temp_unsigned : temp_signed); break;
+        case MT_INT16: val->as_int16 = (int16_t)(from >= MT_UINT8 ? (int64_t)temp_unsigned : temp_signed); break;
+        case MT_INT32: val->as_int32 = (int32_t)(from >= MT_UINT8 ? (int64_t)temp_unsigned : temp_signed); break;
+        case MT_INT64: val->as_int64 = (from >= MT_UINT8 ? (int64_t)temp_unsigned : temp_signed); break;
+        case MT_UINT8:  val->as_uint8 = (uint8_t)(from >= MT_UINT8 ? temp_unsigned : (uint64_t)temp_signed); break;
+        case MT_UINT16: val->as_uint16 = (uint16_t)(from >= MT_UINT8 ? temp_unsigned : (uint64_t)temp_signed); break;
+        case MT_UINT32: val->as_uint32 = (uint32_t)(from >= MT_UINT8 ? temp_unsigned : (uint64_t)temp_signed); break;
+        case MT_UINT64: val->as_uint64 = (from >= MT_UINT8 ? temp_unsigned : (uint64_t)temp_signed); break;
+        default: break;
+    }
 }
 
 void exec_opcode(uint8_t* opcode)
@@ -219,7 +291,7 @@ void exec_opcode(uint8_t* opcode)
     }
     case JEZ:
     {
-        if (vm.stack[vm.sp].as_int32 == 0)
+        if (vm.stack[vm.sp].as_int64 == 0)
             vm.ip = *((uint16_t*) (opcode + 1));
         else
             vm.ip += 3;
@@ -228,219 +300,228 @@ void exec_opcode(uint8_t* opcode)
     }
     case JNZ:
     {
-        if (vm.stack[vm.sp].as_int32 != 0)
+        if (vm.stack[vm.sp].as_int64 != 0)
             vm.ip = *((uint16_t*) (opcode + 1));
         else
             vm.ip += 3;
         --vm.sp;
         break;
     }
-    case ILOAD:
-    {
-        vm.stack[vm.sp + 1].as_int32 = vm.stack[vm.bp + *((uint16_t*) (opcode + 1))].as_int32;
-        ++vm.sp;
-        vm.ip += 3;
-        break;
-    }
-    case ISTORE:
-    {
-        vm.stack[vm.bp + *((uint16_t*) (opcode + 1))].as_int32 = vm.stack[vm.sp].as_int32;
-        --vm.sp;
-        vm.ip += 3;
-        break;
-    }
-    case ILOADG:
-    {
-        vm.stack[vm.sp + 1].as_int32 = vm.stack[*((uint16_t*) (opcode + 1))].as_int32;
-        ++vm.sp;
-        vm.ip += 3;
-        break;
-    }
-    case ISTOREG:
-    {
-        vm.stack[*((uint16_t*) (opcode + 1))].as_int32 = vm.stack[vm.sp].as_int32;
-        --vm.sp;
-        vm.ip += 3;
-        break;
-    }
+    // case ILOAD:
+    // {
+    //     vm.stack[vm.sp + 1].as_int64 = vm.stack[vm.bp + *((uint16_t*) (opcode + 1))].as_int64;
+    //     ++vm.sp;
+    //     vm.ip += 3;
+    //     break;
+    // }
+    // case ISTORE:
+    // {
+    //     vm.stack[vm.bp + *((uint16_t*) (opcode + 1))].as_int64 = vm.stack[vm.sp].as_int64;
+    //     --vm.sp;
+    //     vm.ip += 3;
+    //     break;
+    // }
+    // case ILOADG:
+    // {
+    //     vm.stack[vm.sp + 1].as_int64 = vm.stack[*((uint16_t*) (opcode + 1))].as_int64;
+    //     ++vm.sp;
+    //     vm.ip += 3;
+    //     break;
+    // }
+    // case ISTOREG:
+    // {
+    //     vm.stack[*((uint16_t*) (opcode + 1))].as_int64 = vm.stack[vm.sp].as_int64;
+    //     --vm.sp;
+    //     vm.ip += 3;
+    //     break;
+    // }
     case IINC:
     {
-        vm.stack[vm.sp].as_int32++;
+        vm.stack[vm.sp].as_int64++;
         ++vm.ip;
         break;
     }
     case IDEC:
     {
-        vm.stack[vm.sp].as_int32--;
+        vm.stack[vm.sp].as_int64--;
         ++vm.ip;
         break;
     }
     case INEG:
     {
-        vm.stack[vm.sp].as_int32 *= -1;
+        vm.stack[vm.sp].as_int64 *= -1;
         ++vm.ip;
         break;
     }
     case IABS:
     {
-        if (vm.stack[vm.sp].as_int32 < 0)
-            vm.stack[vm.sp].as_int32 *= -1;
+        if (vm.stack[vm.sp].as_int64 < 0)
+            vm.stack[vm.sp].as_int64 *= -1;
         ++vm.ip;
         break;
     }
     case INOT:
     {
-        vm.stack[vm.sp].as_int32 = ~vm.stack[vm.sp].as_int32;
+        vm.stack[vm.sp].as_int64 = ~vm.stack[vm.sp].as_int64;
         ++vm.ip;
         break;
     }
     case IADD:
     {
-        vm.stack[vm.sp - 1].as_int32 = vm.stack[vm.sp - 1].as_int32 + vm.stack[vm.sp].as_int32;
+        // Compiler guarantees both operands are same type - operate on int64
+        vm.stack[vm.sp - 1].as_int64 = vm.stack[vm.sp - 1].as_int64 + vm.stack[vm.sp].as_int64;
         --vm.sp;
         ++vm.ip;
         break;
     }
     case ISUB:
     {
-        vm.stack[vm.sp - 1].as_int32 = vm.stack[vm.sp - 1].as_int32 - vm.stack[vm.sp].as_int32;
+        vm.stack[vm.sp - 1].as_int64 = vm.stack[vm.sp - 1].as_int64 - vm.stack[vm.sp].as_int64;
         --vm.sp;
         ++vm.ip;
         break;
     }
     case IMUL:
     {
-        vm.stack[vm.sp - 1].as_int32 = vm.stack[vm.sp - 1].as_int32 * vm.stack[vm.sp].as_int32;
+        vm.stack[vm.sp - 1].as_int64 = vm.stack[vm.sp - 1].as_int64 * vm.stack[vm.sp].as_int64;
         --vm.sp;
         ++vm.ip;
         break;
     }
     case IDIV:
     {
-        vm.stack[vm.sp - 1].as_int32 = vm.stack[vm.sp - 1].as_int32 / vm.stack[vm.sp].as_int32;
+        vm.stack[vm.sp - 1].as_int64 = vm.stack[vm.sp - 1].as_int64 / vm.stack[vm.sp].as_int64;
         --vm.sp;
         ++vm.ip;
         break;
     }
     case IMOD:
     {
-        vm.stack[vm.sp - 1].as_int32 = vm.stack[vm.sp - 1].as_int32 % vm.stack[vm.sp].as_int32;
+        vm.stack[vm.sp - 1].as_int64 = vm.stack[vm.sp - 1].as_int64 % vm.stack[vm.sp].as_int64;
         --vm.sp;
         ++vm.ip;
         break;
     }
     case IAND:
     {
-        vm.stack[vm.sp - 1].as_int32 = vm.stack[vm.sp - 1].as_int32 && vm.stack[vm.sp].as_int32;
+        vm.stack[vm.sp - 1].as_int64 = vm.stack[vm.sp - 1].as_int64 && vm.stack[vm.sp].as_int64;
         --vm.sp;
         ++vm.ip;
         break;
     }
     case IOR:
     {
-        vm.stack[vm.sp - 1].as_int32 = vm.stack[vm.sp - 1].as_int32 || vm.stack[vm.sp].as_int32;
+        vm.stack[vm.sp - 1].as_int64 = vm.stack[vm.sp - 1].as_int64 || vm.stack[vm.sp].as_int64;
         --vm.sp;
         ++vm.ip;
         break;
     }
     case IBXOR:
     {
-        vm.stack[vm.sp - 1].as_int32 = vm.stack[vm.sp - 1].as_int32 ^ vm.stack[vm.sp].as_int32;
+        vm.stack[vm.sp - 1].as_int64 = vm.stack[vm.sp - 1].as_int64 ^ vm.stack[vm.sp].as_int64;
         --vm.sp;
         ++vm.ip;
         break;
     }
     case IBOR:
     {
-        vm.stack[vm.sp - 1].as_int32 = vm.stack[vm.sp - 1].as_int32 | vm.stack[vm.sp].as_int32;
+        vm.stack[vm.sp - 1].as_int64 = vm.stack[vm.sp - 1].as_int64 | vm.stack[vm.sp].as_int64;
         --vm.sp;
         ++vm.ip;
         break;
     }
     case IBAND:
     {
-        vm.stack[vm.sp - 1].as_int32 = vm.stack[vm.sp - 1].as_int32 & vm.stack[vm.sp].as_int32;
+        vm.stack[vm.sp - 1].as_int64 = vm.stack[vm.sp - 1].as_int64 & vm.stack[vm.sp].as_int64;
         --vm.sp;
         ++vm.ip;
         break;
     }
     case ISHL:
     {
-        vm.stack[vm.sp - 1].as_int32 = vm.stack[vm.sp - 1].as_int32 << vm.stack[vm.sp].as_int32;
+        vm.stack[vm.sp - 1].as_int64 = vm.stack[vm.sp - 1].as_int64 << vm.stack[vm.sp].as_int64;
         --vm.sp;
         ++vm.ip;
         break;
     }
     case ISHR:
     {
-        vm.stack[vm.sp - 1].as_int32 = vm.stack[vm.sp - 1].as_int32 >> vm.stack[vm.sp].as_int32;
+        vm.stack[vm.sp - 1].as_int64 = vm.stack[vm.sp - 1].as_int64 >> vm.stack[vm.sp].as_int64;
         --vm.sp;
         ++vm.ip;
         break;
     }
     case IGT:
     {
-        vm.stack[vm.sp - 1].as_int32 = vm.stack[vm.sp - 1].as_int32 > vm.stack[vm.sp].as_int32;
+        vm.stack[vm.sp - 1].as_int64 = vm.stack[vm.sp - 1].as_int64 > vm.stack[vm.sp].as_int64;
         --vm.sp;
         ++vm.ip;
         break;
     }
     case ILT:
     {
-        vm.stack[vm.sp - 1].as_int32 = vm.stack[vm.sp - 1].as_int32 < vm.stack[vm.sp].as_int32;
+        vm.stack[vm.sp - 1].as_int64 = vm.stack[vm.sp - 1].as_int64 < vm.stack[vm.sp].as_int64;
         --vm.sp;
         ++vm.ip;
         break;
     }
     case IGE:
     {
-        vm.stack[vm.sp - 1].as_int32 = vm.stack[vm.sp - 1].as_int32 >= vm.stack[vm.sp].as_int32;
+        vm.stack[vm.sp - 1].as_int64 = vm.stack[vm.sp - 1].as_int64 >= vm.stack[vm.sp].as_int64;
         --vm.sp;
         ++vm.ip;
         break;
     }
     case ILE:
     {
-        vm.stack[vm.sp - 1].as_int32 = vm.stack[vm.sp - 1].as_int32 <= vm.stack[vm.sp].as_int32;
+        vm.stack[vm.sp - 1].as_int64 = vm.stack[vm.sp - 1].as_int64 <= vm.stack[vm.sp].as_int64;
         --vm.sp;
         ++vm.ip;
         break;
     }
     case IEQ:
     {
-        vm.stack[vm.sp - 1].as_int32 = vm.stack[vm.sp - 1].as_int32 == vm.stack[vm.sp].as_int32;
+        vm.stack[vm.sp - 1].as_int64 = vm.stack[vm.sp - 1].as_int64 == vm.stack[vm.sp].as_int64;
         --vm.sp;
         ++vm.ip;
         break;
     }
     case INQ:
     {
-        vm.stack[vm.sp - 1].as_int32 = vm.stack[vm.sp - 1].as_int32 != vm.stack[vm.sp].as_int32;
+        vm.stack[vm.sp - 1].as_int64 = vm.stack[vm.sp - 1].as_int64 != vm.stack[vm.sp].as_int64;
         --vm.sp;
         ++vm.ip;
         break;
     }
+    case UCONST:
+    {
+        // Store unsigned constant as int64 for unified operations
+        vm.stack[++vm.sp].as_int64 = (int64_t)*((uint64_t*)(opcode + 1));
+        vm.ip += 9;
+        break;
+    }
     case ICONST:
     {
-        vm.stack[++vm.sp].as_int32 = *((int32_t*) (opcode + 1));
-        vm.ip += 5;
+        vm.stack[++vm.sp].as_int64 = *((int64_t*) (opcode + 1));
+        vm.ip += 9;
         break;
     }
     case ICONST_0:
     {
-        vm.stack[++vm.sp].as_int32 = 0;
+        vm.stack[++vm.sp].as_int64 = 0;
         ++vm.ip;
         break;
     }
     case ICONST_1:
     {
-        vm.stack[++vm.sp].as_int32 = 1;
+        vm.stack[++vm.sp].as_int64 = 1;
         ++vm.ip;
         break;
     }
     case IPRINT:
     {
-        printf("%d", vm.stack[vm.sp].as_int32);
+        // Print as int64 (operations normalize to int64)
+        printf("%" PRId64, vm.stack[vm.sp].as_int64);
         fflush(stdout);
         --vm.sp;
         ++vm.ip;
@@ -448,8 +529,38 @@ void exec_opcode(uint8_t* opcode)
     }
     case ITOR:
     {
-        vm.stack[vm.sp].as_real = (real_t) vm.stack[vm.sp].as_int32;
+        vm.stack[vm.sp].as_real = (real_t) vm.stack[vm.sp].as_int64;
         ++vm.ip;
+        break;
+    }
+    case ICAST:
+    {
+        type_t from = (type_t)opcode[1];
+        type_t to = (type_t)opcode[2];
+        icast_value(&vm.stack[vm.sp], from, to);
+        vm.ip += 3;
+        break;
+    }
+    case ILOAD_T:
+    {
+        type_t type = (type_t)opcode[1];
+        uint16_t addr = *((uint16_t*)(opcode + 2));
+        uint8_t is_global = opcode[4];
+        value_t* src = is_global ? &vm.stack[addr] : &vm.stack[vm.bp + addr];
+        iload_value(&vm.stack[vm.sp + 1], src, type);
+        ++vm.sp;
+        vm.ip += 5;
+        break;
+    }
+    case ISTORE_T:
+    {
+        type_t type = (type_t)opcode[1];
+        uint16_t addr = *((uint16_t*)(opcode + 2));
+        uint8_t is_global = opcode[4];
+        value_t* dest = is_global ? &vm.stack[addr] : &vm.stack[vm.bp + addr];
+        istore_value(dest, &vm.stack[vm.sp], type);
+        --vm.sp;
+        vm.ip += 5;
         break;
     }
     case RLOAD:

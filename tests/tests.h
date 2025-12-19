@@ -4,6 +4,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include "../parser.h"
+#include "../vm.h"
+#include "../context.h"
+
 
 #ifdef __cplusplus
 extern "C"
@@ -141,6 +147,13 @@ struct test_suite_t {
             exit(1); \
         } \
     } while(0)
+
+
+extern char captured_output[4096];
+void capture_stdout_start(void);
+void capture_stdout_end(void);
+void reset_compiler_state(void);
+void compile_and_run(const char* code);
 
 #ifdef __cplusplus
 }

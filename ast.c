@@ -17,16 +17,70 @@ void halt()
     EMIT(HALT);
 }
 
+// Helper function to check if a type is an integer type
+static bool is_integer_type(type_t type)
+{
+    return type == MT_INT8 || type == MT_INT16 || type == MT_INT32 || type == MT_INT64 ||
+           type == MT_UINT8 || type == MT_UINT16 || type == MT_UINT32 || type == MT_UINT64;
+}
+
+// Helper function to emit constant opcode based on type
+static void emit_integer_constant(type_t type, value_t value)
+{
+    // Use optimized constants for 0 and 1
+    if (type == MT_INT8 || type == MT_INT16 || type == MT_INT32 || type == MT_INT64) {
+        int64_t val;
+        switch (type) {
+            case MT_INT8:  val = (int64_t)value.as_int8; break;
+            case MT_INT16: val = (int64_t)value.as_int16; break;
+            case MT_INT32: val = (int64_t)value.as_int32; break;
+            case MT_INT64: val = value.as_int64; break;
+            default: return;
+        }
+        if (val == 0) {
+            EMIT(ICONST_0);
+        } else if (val == 1) {
+            EMIT(ICONST_1);
+        } else {
+            EMIT(ICONST, NUM64(val));
+        }
+    } else if (type == MT_UINT8 || type == MT_UINT16 || type == MT_UINT32 || type == MT_UINT64) {
+        uint64_t val;
+        switch (type) {
+            case MT_UINT8:  val = (uint64_t)value.as_uint8; break;
+            case MT_UINT16: val = (uint64_t)value.as_uint16; break;
+            case MT_UINT32: val = (uint64_t)value.as_uint32; break;
+            case MT_UINT64: val = value.as_uint64; break;
+            default: return;
+        }
+        if (val == 0) {
+            EMIT(ICONST_0);
+        } else if (val == 1) {
+            EMIT(ICONST_1);
+        } else {
+            EMIT(UCONST, NUM64(val));
+        }
+    }
+}
+
+// Helper function to emit conversion opcode
+static void emit_conversion(type_t from, type_t to)
+{
+    if (from == to) return;
+    if (is_integer_type(from) && is_integer_type(to)) {
+        EMIT(ICAST, from, to);
+    }
+}
+
+
 type_t eval_constant(ast_constant_t* ast)
 {
-    if (ast->type == MT_INT32)
+    if (is_integer_type(ast->type))
     {
-        if (ast->value.as_int32 == 0)
-            EMIT(ICONST_0);
-        else if (ast->value.as_int32 == 1)
-            EMIT(ICONST_1);
-        else
-            EMIT(ICONST, NUM32(ast->value.as_int32));
+        emit_integer_constant(ast->type, ast->value);
+        // Convert to int64 for unified operations
+        emit_conversion(ast->type, MT_INT64);
+        return MT_INT64; // Operations normalize to int64
     }
     else if (ast->type == MT_REAL)
     {
@@ -45,8 +99,9 @@ type_t eval_unary(ast_unary_t* ast)
 {
     type_t out = eval(ast->expr);
 
-    if (out == MT_INT32)
+    if (is_integer_type(out))
     {
+        // Operations work on int64 (already normalized)
         switch (ast->op)
         {
         case TK_PLUS:
@@ -60,7 +115,7 @@ type_t eval_unary(ast_unary_t* ast)
         default:
             ;
         }
-        return out;
+        return MT_INT64; // Operations normalize to int64
     }
     else if (out == MT_REAL)
     {
@@ -87,8 +142,10 @@ type_t eval_binary(ast_binary_t* ast)
     type_t l_out = eval(ast->lhs_expr);
     type_t r_out = eval(ast->rhs_expr);
 
-    if (l_out == MT_INT32 && r_out == MT_INT32)
+    if (is_integer_type(l_out) && is_integer_type(r_out))
     {
+        // Both operands are already normalized to int64 by eval()
+        // Operations work on int64
         switch (ast->op)
         {
         case TK_PLUS:
@@ -139,10 +196,11 @@ type_t eval_binary(ast_binary_t* ast)
         case TK_OR:
             EMIT(IOR);
             break;
+        // Note: Shift operators (ISHL, ISHR) exist in VM but no token types yet
         default:
             ;
         }
-        return MT_INT32;
+        return MT_INT64; // Operations normalize to int64
     }
     else if (l_out == MT_REAL && r_out == MT_REAL)
     {
@@ -192,18 +250,21 @@ type_t eval_print(ast_print_t* ast)
 {
     type_t out = eval(ast->expr);
 
-    switch (out)
+    if (is_integer_type(out))
     {
-    case MT_INT32:
+        // Operations normalize to int64, so IPRINT works for all integers
         EMIT(IPRINT);
-        break;
-    case MT_REAL:
+    }
+    else if (out == MT_REAL)
+    {
         EMIT(RPRINT);
-        break;
-    case MT_STR:
+    }
+    else if (out == MT_STR)
+    {
         EMIT(APRINT);
-        break;
-    default:
+    }
+    else
+    {
         panic("Print error. Unknown type.");
         return MT_UNKNOWN;
     }
@@ -213,56 +274,58 @@ type_t eval_print(ast_print_t* ast)
 
 type_t eval_variable(ast_variable_t* ast)
 {
-    if (ast->symbol->type == MT_INT32)
-    {
-        if (ast->symbol->global)
-            EMIT(ILOADG, NUM16(ast->symbol->addr));
-        else
-            EMIT(ILOAD, NUM16(ast->symbol->addr));
+    type_t var_type = ast->symbol->type;
+    bool is_global = ast->symbol->global;
+    uint16_t addr = ast->symbol->addr;
+    
+    if (is_integer_type(var_type)) {
+        EMIT(ILOAD_T, var_type, NUM16(addr), is_global ? 1 : 0);
+        // Convert to int64 for operations
+        if (var_type != MT_INT64) {
+            emit_conversion(var_type, MT_INT64);
+        }
+        return MT_INT64;
+    } else if (var_type == MT_REAL) {
+        if (is_global) EMIT(RLOADG, NUM16(addr));
+        else EMIT(RLOAD, NUM16(addr));
+    } else if (var_type == MT_STR) {
+        EMIT(ALOAD, NUM16(addr));
     }
-    else if (ast->symbol->type == MT_REAL)
-    {
-        if (ast->symbol->global)
-            EMIT(RLOADG, NUM16(ast->symbol->addr));
-        else
-            EMIT(RLOAD, NUM16(ast->symbol->addr));
-    }
-    else if (ast->symbol->type == MT_STR)
-    {
-        EMIT(ALOAD, NUM16(ast->symbol->addr));
-    }
-    return ast->symbol->type;
+    return var_type;
 }
 
 type_t eval_assign(ast_assign_t* ast)
 {
-    type_t out = eval(ast->expr);
+    type_t expr_type = eval(ast->expr);
+    type_t var_type = ast->symbol->type;
+    bool is_global = ast->symbol->global;
+    uint16_t addr = ast->symbol->addr;
 
-    if (ast->symbol->type != MT_UNKNOWN && ast->symbol->type != out)
+    // If variable type is unknown, infer from expression
+    if (var_type == MT_UNKNOWN) {
+        var_type = expr_type;
+        ast->symbol->type = var_type;
+    }
+
+    // Convert expression result to variable type if needed
+    if (is_integer_type(expr_type) && is_integer_type(var_type)) {
+        // Expression is already normalized to int64, convert to variable type
+        emit_conversion(MT_INT64, var_type);
+    } else if (expr_type != var_type && !(is_integer_type(expr_type) && is_integer_type(var_type))) {
         panic("Assignment type mismatch");
-
-    if (out == MT_INT32)
-    {
-        if (ast->symbol->global)
-            EMIT(ISTOREG, NUM16(ast->symbol->addr));
-        else
-            EMIT(ISTORE, NUM16(ast->symbol->addr));
-    }
-    else if (out == MT_REAL)
-    {
-        if (ast->symbol->global)
-            EMIT(RSTOREG, NUM16(ast->symbol->addr));
-        else
-            EMIT(RSTORE, NUM16(ast->symbol->addr));
-    }
-    else if (out == MT_STR)
-    {
-        EMIT(ASTORE, NUM16(ast->symbol->addr));
     }
 
-    ast->symbol->type = out;
+    // Store using unified opcode
+    if (is_integer_type(var_type)) {
+        EMIT(ISTORE_T, var_type, NUM16(addr), is_global ? 1 : 0);
+    } else if (var_type == MT_REAL) {
+        if (is_global) EMIT(RSTOREG, NUM16(addr));
+        else EMIT(RSTORE, NUM16(addr));
+    } else if (var_type == MT_STR) {
+        EMIT(ASTORE, NUM16(addr));
+    }
 
-    return out;
+    return var_type;
 }
 
 type_t eval_block(ast_block_t* ast)
@@ -271,7 +334,7 @@ type_t eval_block(ast_block_t* ast)
     {
         uint16_t vars = context_allocated(ast->context);
         uint16_t args = 0;
-        EMIT(ICONST_0, ICONST_0, PROC, NUM16(args), NUM16(vars - args));
+        EMIT(ICONST_0, ICONST_0, PROC, NUM16(args), NUM16((vars - args)));
     }
 
     for (size_t i = 0; i < vec_size(ast->nodes); i++)
@@ -358,7 +421,7 @@ type_t eval_func_decl(ast_func_decl_t* ast)
 
     uint16_t vars = context_allocated(ast->body->context);
     uint16_t args = ast->args;
-    EMIT(PROC, NUM16(args), NUM16(vars - args));
+    EMIT(PROC, NUM16(args), NUM16((vars - args)));
 
     ast->symbol->addr = func_beg->label;
 
