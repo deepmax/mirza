@@ -128,11 +128,21 @@ type_t data_type()
 
     switch (look.type)
     {
+        case TK_INT8: t = MT_INT8; break;
+        case TK_INT16: t = MT_INT16; break;
         case TK_INT32: t = MT_INT32; break;
+        case TK_INT64: t = MT_INT64; break;
+        case TK_UINT8: t = MT_UINT8; break;
+        case TK_UINT16: t = MT_UINT16; break;
+        case TK_UINT32: t = MT_UINT32; break;
+        case TK_UINT64: t = MT_UINT64; break;
         case TK_STR: t = MT_STR; break;
         case TK_REAL: t = MT_REAL; break;
         case TK_BOOL: t = MT_BOOL; break;
+        case TK_VOID: t = MT_VOID; break;
         default:
+            panic("Unknown data type.");
+            return MT_UNKNOWN;
     }
 
     match(look.type);
@@ -369,6 +379,8 @@ ast_t* func_decl()
         match(TK_IDENT);
         
         param->type = data_type();
+
+        // printf("%s, param type: %d\n", param->id, param->type);
 
         vec_append(params, param);
 

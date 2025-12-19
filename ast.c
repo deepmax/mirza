@@ -200,9 +200,11 @@ type_t eval_print(ast_print_t* ast)
         EMIT(APRINT);
         break;
     default:
+        panic("Print error. Unknown type.");
+        return MT_UNKNOWN;
     }
-
-    return MT_UNKNOWN;
+    
+    return out;
 }
 
 type_t eval_variable(ast_variable_t* ast)

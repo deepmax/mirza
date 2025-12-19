@@ -1,7 +1,5 @@
-func add(a : int) : void {
-    print a
-    ret
+func add(a: i32, b: i32): void {
+    print a + b
 }
 
-
-add(1)
+add(100, 200)

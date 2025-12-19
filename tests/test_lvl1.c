@@ -338,7 +338,7 @@ static void test_function_no_params(test_suite_t* suite)
 static void test_function_with_params(test_suite_t* suite)
 {
     capture_stdout_start();
-    compile_and_run("func add(a : int, b : int) : int {\nret a + b\n}\nprint add(5, 3)\n");
+    compile_and_run("func add(a : i32, b : i32) : void {\nret a + b\n}\nprint add(5, 3)\n");
     capture_stdout_end();
     
     TEST_ASSERT_STR_EQ(captured_output, "8", "should print 8");
@@ -348,7 +348,7 @@ static void test_function_with_params(test_suite_t* suite)
 static void test_function_return(test_suite_t* suite)
 {
     capture_stdout_start();
-    compile_and_run("func square(x : int) : int {\nret x * x\n}\nprint square(6)\n");
+    compile_and_run("func square(x : i32) : i32 {\nret x * x\n}\nprint square(6)\n");
     capture_stdout_end();
     
     TEST_ASSERT_STR_EQ(captured_output, "36", "should print 36");
@@ -358,7 +358,7 @@ static void test_function_return(test_suite_t* suite)
 static void test_recursive_factorial(test_suite_t* suite)
 {
     capture_stdout_start();
-    compile_and_run("func fact(n : int) : int {\nif n <= 1 {\nret 1\n}\nret fact(n - 1) * n\n}\nprint fact(5)\n");
+    compile_and_run("func fact(n : i32) : i32 {\nif n <= 1 {\nret 1\n}\nret fact(n - 1) * n\n}\nprint fact(5)\n");
     capture_stdout_end();
     
     TEST_ASSERT_STR_EQ(captured_output, "120", "should print 120 (5!)");
@@ -448,7 +448,7 @@ static void test_complex_expression(test_suite_t* suite)
 static void test_function_in_expression(test_suite_t* suite)
 {
     capture_stdout_start();
-    compile_and_run("func double(x : int) : int {\nret x * 2\n}\nprint double(5) + 10\n");
+    compile_and_run("func double(x : i32) : i32 {\nret x * 2\n}\nprint double(5) + 10\n");
     capture_stdout_end();
     
     TEST_ASSERT_STR_EQ(captured_output, "20", "should print 20");
@@ -468,7 +468,7 @@ static void test_variable_scope(test_suite_t* suite)
 static void test_multiple_function_calls(test_suite_t* suite)
 {
     capture_stdout_start();
-    compile_and_run("func inc(x : int) : int {\nret x + 1\n}\nprint inc(1)\nprint inc(2)\nprint inc(3)\n");
+    compile_and_run("func inc(x : i32) : i32 {\nret x + 1\n}\nprint inc(1)\nprint inc(2)\nprint inc(3)\n");
     capture_stdout_end();
     
     TEST_ASSERT_STR_EQ(captured_output, "234", "should print 234");
