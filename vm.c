@@ -71,7 +71,15 @@ const opcode_t OPCODES[] = {
     {ICONST_0, 0, "iconst_0"},
     {ICONST_1, 0, "iconst_1"},
     {IPRINT, 0, "iprint"},
-    {ICAST, 2, "icast"},
+    {UPRINT, 0, "uprint"},
+    {I8CAST, 0, "i8cast"},
+    {I16CAST, 0, "i16cast"},
+    {I32CAST, 0, "i32cast"},
+    {I64CAST, 0, "i64cast"},
+    {U8CAST, 0, "u8cast"},
+    {U16CAST, 0, "u16cast"},
+    {U32CAST, 0, "u32cast"},
+    {U64CAST, 0, "u64cast"},
     {ILOAD_T, 4, "iload_t"},
     {ISTORE_T, 4, "istore_t"},
     {ITOR, 0, "itor"},
@@ -179,40 +187,6 @@ static void istore_value(value_t* dest, value_t* src, type_t type)
     }
 }
 
-// Helper function to perform integer type conversion
-static void icast_value(value_t* val, type_t from, type_t to)
-{
-    if (from == to) return;
-    
-    int64_t temp_signed;
-    uint64_t temp_unsigned;
-    
-    // Extract value from source type
-    switch (from) {
-        case MT_INT8:  temp_signed = (int64_t)val->as_int8; break;
-        case MT_INT16: temp_signed = (int64_t)val->as_int16; break;
-        case MT_INT32: temp_signed = (int64_t)val->as_int32; break;
-        case MT_INT64: temp_signed = val->as_int64; break;
-        case MT_UINT8:  temp_unsigned = (uint64_t)val->as_uint8; break;
-        case MT_UINT16: temp_unsigned = (uint64_t)val->as_uint16; break;
-        case MT_UINT32: temp_unsigned = (uint64_t)val->as_uint32; break;
-        case MT_UINT64: temp_unsigned = val->as_uint64; break;
-        default: return;
-    }
-    
-    // Write value to target type
-    switch (to) {
-        case MT_INT8:  val->as_int8 = (int8_t)(from >= MT_UINT8 ? (int64_t)temp_unsigned : temp_signed); break;
-        case MT_INT16: val->as_int16 = (int16_t)(from >= MT_UINT8 ? (int64_t)temp_unsigned : temp_signed); break;
-        case MT_INT32: val->as_int32 = (int32_t)(from >= MT_UINT8 ? (int64_t)temp_unsigned : temp_signed); break;
-        case MT_INT64: val->as_int64 = (from >= MT_UINT8 ? (int64_t)temp_unsigned : temp_signed); break;
-        case MT_UINT8:  val->as_uint8 = (uint8_t)(from >= MT_UINT8 ? temp_unsigned : (uint64_t)temp_signed); break;
-        case MT_UINT16: val->as_uint16 = (uint16_t)(from >= MT_UINT8 ? temp_unsigned : (uint64_t)temp_signed); break;
-        case MT_UINT32: val->as_uint32 = (uint32_t)(from >= MT_UINT8 ? temp_unsigned : (uint64_t)temp_signed); break;
-        case MT_UINT64: val->as_uint64 = (from >= MT_UINT8 ? temp_unsigned : (uint64_t)temp_signed); break;
-        default: break;
-    }
-}
 
 void exec_opcode(uint8_t* opcode)
 {
@@ -531,18 +505,66 @@ void exec_opcode(uint8_t* opcode)
         ++vm.ip;
         break;
     }
+    case UPRINT:
+    {
+        printf("%" PRIu64, vm.stack[vm.sp].as_uint64);
+        fflush(stdout);
+        --vm.sp;
+        ++vm.ip;
+        break;
+    }
     case ITOR:
     {
         vm.stack[vm.sp].as_real = (real_t) vm.stack[vm.sp].as_int64;
         ++vm.ip;
         break;
     }
-    case ICAST:
+    case I8CAST:
     {
-        type_t from = (type_t)opcode[1];
-        type_t to = (type_t)opcode[2];
-        icast_value(&vm.stack[vm.sp], from, to);
-        vm.ip += 3;
+        vm.stack[vm.sp].as_int8 = (int8_t)vm.stack[vm.sp].as_int64;
+        ++vm.ip;
+        break;
+    }
+    case I16CAST:
+    {
+        vm.stack[vm.sp].as_int16 = (int16_t)vm.stack[vm.sp].as_int64;
+        ++vm.ip;
+        break;
+    }
+    case I32CAST:
+    {
+        vm.stack[vm.sp].as_int32 = (int32_t)vm.stack[vm.sp].as_int64;
+        ++vm.ip;
+        break;
+    }
+    case I64CAST:
+    {
+        // Already int64, no conversion needed
+        ++vm.ip;
+        break;
+    }
+    case U8CAST:
+    {
+        vm.stack[vm.sp].as_uint8 = (uint8_t)vm.stack[vm.sp].as_int64;
+        ++vm.ip;
+        break;
+    }
+    case U16CAST:
+    {
+        vm.stack[vm.sp].as_uint16 = (uint16_t)vm.stack[vm.sp].as_int64;
+        ++vm.ip;
+        break;
+    }
+    case U32CAST:
+    {
+        vm.stack[vm.sp].as_uint32 = (uint32_t)vm.stack[vm.sp].as_int64;
+        ++vm.ip;
+        break;
+    }
+    case U64CAST:
+    {
+        vm.stack[vm.sp].as_uint64 = (uint64_t)vm.stack[vm.sp].as_int64;
+        ++vm.ip;
         break;
     }
     case ILOAD_T:

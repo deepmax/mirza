@@ -68,7 +68,17 @@ static void emit_conversion(type_t from, type_t to)
 {
     if (from == to) return;
     if (is_integer_type(from) && is_integer_type(to)) {
-        EMIT(ICAST, from, to);
+        switch (to) {
+            case MT_INT8:  EMIT(I8CAST); break;
+            case MT_INT16: EMIT(I16CAST); break;
+            case MT_INT32: EMIT(I32CAST); break;
+            case MT_INT64: EMIT(I64CAST); break;
+            case MT_UINT8:  EMIT(U8CAST); break;
+            case MT_UINT16: EMIT(U16CAST); break;
+            case MT_UINT32: EMIT(U32CAST); break;
+            case MT_UINT64: EMIT(U64CAST); break;
+            default: break;
+        }
     }
 }
 
@@ -112,7 +122,11 @@ type_t eval_unary(ast_unary_t* ast)
 
     if (is_integer_type(out))
     {
-        // Operations work on int64 (already normalized)
+        // Convert to int64 for operations if not already
+        if (out != MT_INT64) {
+            emit_conversion(out, MT_INT64);
+        }
+        // Operations work on int64
         switch (ast->op)
         {
         case TK_PLUS:
@@ -155,7 +169,13 @@ type_t eval_binary(ast_binary_t* ast)
 
     if (is_integer_type(l_out) && is_integer_type(r_out))
     {
-        // Both operands are already normalized to int64 by eval()
+        // Convert both operands to int64 for operations if not already
+        if (l_out != MT_INT64) {
+            emit_conversion(l_out, MT_INT64);
+        }
+        if (r_out != MT_INT64) {
+            emit_conversion(r_out, MT_INT64);
+        }
         // Operations work on int64
         switch (ast->op)
         {
@@ -263,8 +283,25 @@ type_t eval_print(ast_print_t* ast)
 
     if (is_integer_type(out))
     {
-        // Operations normalize to int64, so IPRINT works for all integers
-        EMIT(IPRINT);
+        // Use UPRINT for unsigned types, IPRINT for signed types
+        if (out == MT_UINT8 || out == MT_UINT16 || out == MT_UINT32 || out == MT_UINT64) {
+            // Cast to the unsigned type to ensure value is in unsigned format
+            // (value may be in as_int64 from iload_value or operations)
+            switch (out) {
+                case MT_UINT8:  EMIT(U8CAST); break;
+                case MT_UINT16: EMIT(U16CAST); break;
+                case MT_UINT32: EMIT(U32CAST); break;
+                case MT_UINT64: EMIT(U64CAST); break;
+                default: break;
+            }
+            EMIT(UPRINT);
+        } else {
+            // For signed types, ensure value is in int64 format
+            if (out != MT_INT64) {
+                emit_conversion(out, MT_INT64);
+            }
+            EMIT(IPRINT);
+        }
     }
     else if (out == MT_REAL)
     {
@@ -291,11 +328,9 @@ type_t eval_variable(ast_variable_t* ast)
     
     if (is_integer_type(var_type)) {
         EMIT(ILOAD_T, var_type, NUM16(addr), is_global ? 1 : 0);
-        // Convert to int64 for operations
-        if (var_type != MT_INT64) {
-            emit_conversion(var_type, MT_INT64);
-        }
-        return MT_INT64;
+        // Return original type to preserve signed/unsigned information
+        // Operations will convert to int64 if needed
+        return var_type;
     } else if (var_type == MT_REAL) {
         if (is_global) EMIT(RLOADG, NUM16(addr));
         else EMIT(RLOAD, NUM16(addr));
