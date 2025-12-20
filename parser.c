@@ -267,10 +267,31 @@ ast_t* factor()
         value.as_int64 = 0;
         node = (ast_t*) ast_new_constant(MT_INT64, value);
     }
+    else if (look.type == TK_INT8)
+    {
+        value_t value;
+        value.as_int8 = (int8_t)look.value.as_long;
+        match(TK_INT8);
+        node = (ast_t*) ast_new_constant(MT_INT8, value);
+    }
+    else if (look.type == TK_INT16)
+    {
+        value_t value;
+        value.as_int16 = (int16_t)look.value.as_long;
+        match(TK_INT16);
+        node = (ast_t*) ast_new_constant(MT_INT16, value);
+    }
+    else if (look.type == TK_INT32)
+    {
+        value_t value;
+        value.as_int32 = (int32_t)look.value.as_long;
+        match(TK_INT32);
+        node = (ast_t*) ast_new_constant(MT_INT32, value);
+    }
     else if (look.type == TK_INT64)
     {
         value_t value;
-        value.as_int64 = look.value.as_int;
+        value.as_int64 = look.value.as_long;
         match(TK_INT64);
         node = (ast_t*) ast_new_constant(MT_INT64, value);
     }
@@ -385,6 +406,7 @@ ast_t* func_decl()
     type_t ret_type = data_type();
 
     s->type = MT_FUNC;
+    s->ret_type = ret_type;  // Store return type in symbol
 
     return (ast_t*) ast_new_func_decl(s, (ast_block_t*) block(MB_FUNC, params), vec_size(params), ret_type);
 }

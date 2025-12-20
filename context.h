@@ -16,6 +16,7 @@ typedef struct
     type_t type;
     uint16_t addr;
     bool_t global;
+    type_t ret_type;  // For functions: stores the return type
 } symbol_t;
 
 typedef struct

@@ -18,10 +18,10 @@ void halt()
 }
 
 // Helper function to check if a type is an integer type
+// Java strategy: only signed integers are supported
 static bool is_integer_type(type_t type)
 {
-    return type == MT_INT8 || type == MT_INT16 || type == MT_INT32 || type == MT_INT64 ||
-           type == MT_UINT8 || type == MT_UINT16 || type == MT_UINT32 || type == MT_UINT64;
+    return type == MT_INT8 || type == MT_INT16 || type == MT_INT32 || type == MT_INT64;
 }
 
 // Helper function to emit constant opcode based on type
@@ -42,43 +42,40 @@ static void emit_integer_constant(type_t type, value_t value)
         } else if (val == 1) {
             EMIT(ICONST_1);
         } else {
-            EMIT(ICONST, NUM64(val));
-        }
-    } else if (type == MT_UINT8 || type == MT_UINT16 || type == MT_UINT32 || type == MT_UINT64) {
-        uint64_t val;
-        switch (type) {
-            case MT_UINT8:  val = (uint64_t)value.as_uint8; break;
-            case MT_UINT16: val = (uint64_t)value.as_uint16; break;
-            case MT_UINT32: val = (uint64_t)value.as_uint32; break;
-            case MT_UINT64: val = value.as_uint64; break;
-            default: return;
-        }
-        if (val == 0) {
-            EMIT(ICONST_0);
-        } else if (val == 1) {
-            EMIT(ICONST_1);
-        } else {
-            EMIT(UCONST, NUM64(val));
+            // Use type-specific opcodes for shorter bytecode
+            switch (type) {
+                case MT_INT8:
+                    EMIT(I8CONST, NUM8((int8_t)val));
+                    break;
+                case MT_INT16:
+                    EMIT(I16CONST, NUM16((int16_t)val));
+                    break;
+                case MT_INT32:
+                    EMIT(I32CONST, NUM32((int32_t)val));
+                    break;
+                case MT_INT64:
+                    EMIT(ICONST, NUM64(val));
+                    break;
+                default:
+                    EMIT(ICONST, NUM64(val));
+                    break;
+            }
         }
     }
 }
 
 // Helper function to emit conversion opcode
+// Java strategy: emit conversions for all smaller types (i8cast, i16cast, i32cast)
 static void emit_conversion(type_t from, type_t to)
 {
     if (from == to) return;
-    if (is_integer_type(from) && is_integer_type(to)) {
-        switch (to) {
-            case MT_INT8:  EMIT(I8CAST); break;
-            case MT_INT16: EMIT(I16CAST); break;
-            case MT_INT32: EMIT(I32CAST); break;
-            case MT_INT64: EMIT(I64CAST); break;
-            case MT_UINT8:  EMIT(U8CAST); break;
-            case MT_UINT16: EMIT(U16CAST); break;
-            case MT_UINT32: EMIT(U32CAST); break;
-            case MT_UINT64: EMIT(U64CAST); break;
-            default: break;
-        }
+    // All operations work on int64, so we need to truncate when converting to smaller types
+    switch (to) {
+        case MT_INT8:  EMIT(I8CAST); break;  // int64 to int8
+        case MT_INT16: EMIT(I16CAST); break; // int64 to int16
+        case MT_INT32: EMIT(I32CAST); break; // int64 to int32
+        case MT_INT64: // No-op, already int64
+        default: break;
     }
 }
 
@@ -283,25 +280,9 @@ type_t eval_print(ast_print_t* ast)
 
     if (is_integer_type(out))
     {
-        // Use UPRINT for unsigned types, IPRINT for signed types
-        if (out == MT_UINT8 || out == MT_UINT16 || out == MT_UINT32 || out == MT_UINT64) {
-            // Cast to the unsigned type to ensure value is in unsigned format
-            // (value may be in as_int64 from iload_value or operations)
-            switch (out) {
-                case MT_UINT8:  EMIT(U8CAST); break;
-                case MT_UINT16: EMIT(U16CAST); break;
-                case MT_UINT32: EMIT(U32CAST); break;
-                case MT_UINT64: EMIT(U64CAST); break;
-                default: break;
-            }
-            EMIT(UPRINT);
-        } else {
-            // For signed types, ensure value is in int64 format
-            if (out != MT_INT64) {
-                emit_conversion(out, MT_INT64);
-            }
-            EMIT(IPRINT);
-        }
+        // All integer types are represented as int64 on the stack
+        // No conversion needed for printing (value is already in int64 format)
+        EMIT(IPRINT);
     }
     else if (out == MT_REAL)
     {
@@ -327,7 +308,7 @@ type_t eval_variable(ast_variable_t* ast)
     uint16_t addr = ast->symbol->addr;
     
     if (is_integer_type(var_type)) {
-        EMIT(ILOAD_T, var_type, NUM16(addr), is_global ? 1 : 0);
+        EMIT(ILOAD, var_type, NUM16(addr), is_global ? 1 : 0);
         // Return original type to preserve signed/unsigned information
         // Operations will convert to int64 if needed
         return var_type;
@@ -363,7 +344,7 @@ type_t eval_assign(ast_assign_t* ast)
 
     // Store using unified opcode
     if (is_integer_type(var_type)) {
-        EMIT(ISTORE_T, var_type, NUM16(addr), is_global ? 1 : 0);
+        EMIT(ISTORE, var_type, NUM16(addr), is_global ? 1 : 0);
     } else if (var_type == MT_REAL) {
         if (is_global) EMIT(RSTOREG, NUM16(addr));
         else EMIT(RSTORE, NUM16(addr));
@@ -486,6 +467,8 @@ type_t eval_func_decl(ast_func_decl_t* ast)
 type_t eval_func_return(ast_func_return_t* ast)
 {
     type_t out = eval(ast->expr);
+    // Note: Return type conversion should be handled at function call site
+    // For now, we return the expression type
     EMIT(RET);
     return out;
 }
@@ -495,7 +478,19 @@ type_t eval_func_call(ast_func_call_t* ast)
     for (size_t i = 0; i < vec_size(ast->args); i++)
         eval(vec_get(ast->args, i));
     EMIT(CALL, NUM16(ast->symbol->addr));
-    return MT_INT32;
+    
+    // Get function's return type and convert if needed
+    type_t ret_type = ast->symbol->ret_type;
+    if (ret_type == MT_UNKNOWN || ret_type == MT_VOID) {
+        ret_type = MT_INT64;  // Default to int64 if not set
+    }
+    
+    // Function returns int64 on stack, convert to declared return type
+    if (is_integer_type(ret_type)) {
+        emit_conversion(MT_INT64, ret_type);
+    }
+    
+    return ret_type;
 }
 
 type_t eval_break_loop(ast_break_loop_t* ast)

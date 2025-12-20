@@ -66,22 +66,18 @@ const opcode_t OPCODES[] = {
     // {ISTORE, 2, "istore"},
     // {ILOADG, 2, "iloadg"},
     // {ISTOREG, 2, "istoreg"},
-    {UCONST, 8, "uconst"},
+    {I8CONST, 1, "i8const"},
+    {I16CONST, 2, "i16const"},
+    {I32CONST, 4, "i32const"},
     {ICONST, 8, "iconst"},
     {ICONST_0, 0, "iconst_0"},
     {ICONST_1, 0, "iconst_1"},
     {IPRINT, 0, "iprint"},
-    {UPRINT, 0, "uprint"},
     {I8CAST, 0, "i8cast"},
     {I16CAST, 0, "i16cast"},
     {I32CAST, 0, "i32cast"},
-    {I64CAST, 0, "i64cast"},
-    {U8CAST, 0, "u8cast"},
-    {U16CAST, 0, "u16cast"},
-    {U32CAST, 0, "u32cast"},
-    {U64CAST, 0, "u64cast"},
-    {ILOAD_T, 4, "iload_t"},
-    {ISTORE_T, 4, "istore_t"},
+    {ILOAD, 4, "iload"},
+    {ISTORE, 4, "istore"},
     {ITOR, 0, "itor"},
     {RINC, 0, "rinc"},
     {RDEC, 0, "rdec"},
@@ -156,6 +152,7 @@ void vm_free()
 }
 
 // Helper function to load integer value from stack by type
+// All integer types are loaded as int64 (Java strategy)
 static void iload_value(value_t* dest, value_t* src, type_t type)
 {
     switch (type) {
@@ -163,15 +160,12 @@ static void iload_value(value_t* dest, value_t* src, type_t type)
         case MT_INT16: dest->as_int64 = (int64_t)src->as_int16; break;
         case MT_INT32: dest->as_int64 = (int64_t)src->as_int32; break;
         case MT_INT64: dest->as_int64 = src->as_int64; break;
-        case MT_UINT8:  dest->as_int64 = (int64_t)src->as_uint8; break;
-        case MT_UINT16: dest->as_int64 = (int64_t)src->as_uint16; break;
-        case MT_UINT32: dest->as_int64 = (int64_t)src->as_uint32; break;
-        case MT_UINT64: dest->as_int64 = (int64_t)src->as_uint64; break;
         default: break;
     }
 }
 
 // Helper function to store integer value to stack by type
+// Values are stored from int64, truncating as needed (Java strategy)
 static void istore_value(value_t* dest, value_t* src, type_t type)
 {
     switch (type) {
@@ -179,10 +173,6 @@ static void istore_value(value_t* dest, value_t* src, type_t type)
         case MT_INT16: dest->as_int16 = (int16_t)src->as_int64; break;
         case MT_INT32: dest->as_int32 = (int32_t)src->as_int64; break;
         case MT_INT64: dest->as_int64 = src->as_int64; break;
-        case MT_UINT8:  dest->as_uint8 = (uint8_t)src->as_int64; break;
-        case MT_UINT16: dest->as_uint16 = (uint16_t)src->as_int64; break;
-        case MT_UINT32: dest->as_uint32 = (uint32_t)src->as_int64; break;
-        case MT_UINT64: dest->as_uint64 = (uint64_t)src->as_int64; break;
         default: break;
     }
 }
@@ -473,10 +463,28 @@ void exec_opcode(uint8_t* opcode)
         ++vm.ip;
         break;
     }
-    case UCONST:
+    case I8CONST:
     {
-        vm.stack[++vm.sp].as_uint64 = (uint64_t)*((uint64_t*)(opcode + 1));
-        vm.ip += 9;
+        // Load 1-byte constant and sign-extend to int64
+        int8_t val = (int8_t)opcode[1];
+        vm.stack[++vm.sp].as_int64 = (int64_t)val;
+        vm.ip += 2;
+        break;
+    }
+    case I16CONST:
+    {
+        // Load 2-byte constant and sign-extend to int64
+        int16_t val = *((int16_t*)(opcode + 1));
+        vm.stack[++vm.sp].as_int64 = (int64_t)val;
+        vm.ip += 3;
+        break;
+    }
+    case I32CONST:
+    {
+        // Load 4-byte constant and sign-extend to int64
+        int32_t val = *((int32_t*)(opcode + 1));
+        vm.stack[++vm.sp].as_int64 = (int64_t)val;
+        vm.ip += 5;
         break;
     }
     case ICONST:
@@ -505,14 +513,6 @@ void exec_opcode(uint8_t* opcode)
         ++vm.ip;
         break;
     }
-    case UPRINT:
-    {
-        printf("%" PRIu64, vm.stack[vm.sp].as_uint64);
-        fflush(stdout);
-        --vm.sp;
-        ++vm.ip;
-        break;
-    }
     case ITOR:
     {
         vm.stack[vm.sp].as_real = (real_t) vm.stack[vm.sp].as_int64;
@@ -521,53 +521,26 @@ void exec_opcode(uint8_t* opcode)
     }
     case I8CAST:
     {
-        vm.stack[vm.sp].as_int8 = (int8_t)vm.stack[vm.sp].as_int64;
+        // Convert int64 to int8 (truncate to 8 bits, sign-extend)
+        vm.stack[vm.sp].as_int64 = (int64_t)(int8_t)vm.stack[vm.sp].as_int64;
         ++vm.ip;
         break;
     }
     case I16CAST:
     {
-        vm.stack[vm.sp].as_int16 = (int16_t)vm.stack[vm.sp].as_int64;
+        // Convert int64 to int16 (truncate to 16 bits, sign-extend)
+        vm.stack[vm.sp].as_int64 = (int64_t)(int16_t)vm.stack[vm.sp].as_int64;
         ++vm.ip;
         break;
     }
     case I32CAST:
     {
-        vm.stack[vm.sp].as_int32 = (int32_t)vm.stack[vm.sp].as_int64;
+        // Convert int64 to int32 (truncate to 32 bits, sign-extend)
+        vm.stack[vm.sp].as_int64 = (int64_t)(int32_t)vm.stack[vm.sp].as_int64;
         ++vm.ip;
         break;
     }
-    case I64CAST:
-    {
-        // Already int64, no conversion needed
-        ++vm.ip;
-        break;
-    }
-    case U8CAST:
-    {
-        vm.stack[vm.sp].as_uint8 = (uint8_t)vm.stack[vm.sp].as_int64;
-        ++vm.ip;
-        break;
-    }
-    case U16CAST:
-    {
-        vm.stack[vm.sp].as_uint16 = (uint16_t)vm.stack[vm.sp].as_int64;
-        ++vm.ip;
-        break;
-    }
-    case U32CAST:
-    {
-        vm.stack[vm.sp].as_uint32 = (uint32_t)vm.stack[vm.sp].as_int64;
-        ++vm.ip;
-        break;
-    }
-    case U64CAST:
-    {
-        vm.stack[vm.sp].as_uint64 = (uint64_t)vm.stack[vm.sp].as_int64;
-        ++vm.ip;
-        break;
-    }
-    case ILOAD_T:
+    case ILOAD:
     {
         type_t type = (type_t)opcode[1];
         uint16_t addr = *((uint16_t*)(opcode + 2));
@@ -578,7 +551,7 @@ void exec_opcode(uint8_t* opcode)
         vm.ip += 5;
         break;
     }
-    case ISTORE_T:
+    case ISTORE:
     {
         type_t type = (type_t)opcode[1];
         uint16_t addr = *((uint16_t*)(opcode + 2));

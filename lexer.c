@@ -334,8 +334,22 @@ token_t lexer_next()
         else
         {
             uint8_t* end = number.data + number.used - 1;
-            token.type = TK_INT64;
-            token.value.as_int = strtol((char*) number.data, (char**) &end, 10);
+            int64_t val = strtoll((char*) number.data, (char**) &end, 10);
+            
+            // Emit the smallest integer type that fits the value
+            if (val >= -128 && val <= 127) {
+                token.type = TK_INT8;
+                token.value.as_long = val;
+            } else if (val >= -32768 && val <= 32767) {
+                token.type = TK_INT16;
+                token.value.as_long = val;
+            } else if (val >= -2147483648LL && val <= 2147483647LL) {
+                token.type = TK_INT32;
+                token.value.as_long = val;
+            } else {
+                token.type = TK_INT64;
+                token.value.as_long = val;
+            }
         }
     }
     else if (look == '"')
