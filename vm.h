@@ -44,20 +44,16 @@ enum
     ILE,
     IEQ,
     INQ,
-    // ILOAD,
-    // ISTORE,
-    // ILOADG,
-    // ISTOREG,
-    I8CONST,   // 1 byte constant
-    I16CONST,  // 2 byte constant
-    I32CONST,  // 4 byte constant
-    ICONST,    // 8 byte constant (i64)
+    I8CONST,
+    I16CONST,
+    I32CONST,
+    ICONST,
     ICONST_0,
     ICONST_1,
     IPRINT,
-    I8CAST,  // int64 to int8 (truncate to 8 bits)
-    I16CAST, // int64 to int16 (truncate to 16 bits)
-    I32CAST, // int64 to int32 (truncate to 32 bits)
+    I8CAST,
+    I16CAST,
+    I32CAST,
     ILOAD,
     ISTORE,
     ITOR,

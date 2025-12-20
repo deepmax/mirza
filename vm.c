@@ -62,10 +62,6 @@ const opcode_t OPCODES[] = {
     {ILE, 0, "ile"},
     {IEQ, 0, "ieq"},
     {INQ, 0, "inq"},
-    // {ILOAD, 2, "iload"},
-    // {ISTORE, 2, "istore"},
-    // {ILOADG, 2, "iloadg"},
-    // {ISTOREG, 2, "istoreg"},
     {I8CONST, 1, "i8const"},
     {I16CONST, 2, "i16const"},
     {I32CONST, 4, "i32const"},
@@ -151,8 +147,6 @@ void vm_free()
     buffer_free(&vm.program);
 }
 
-// Helper function to load integer value from stack by type
-// All integer types are loaded as int64 (Java strategy)
 static void iload_value(value_t* dest, value_t* src, type_t type)
 {
     switch (type) {
@@ -164,8 +158,6 @@ static void iload_value(value_t* dest, value_t* src, type_t type)
     }
 }
 
-// Helper function to store integer value to stack by type
-// Values are stored from int64, truncating as needed (Java strategy)
 static void istore_value(value_t* dest, value_t* src, type_t type)
 {
     switch (type) {
@@ -278,34 +270,6 @@ void exec_opcode(uint8_t* opcode)
         --vm.sp;
         break;
     }
-    // case ILOAD:
-    // {
-    //     vm.stack[vm.sp + 1].as_int64 = vm.stack[vm.bp + *((uint16_t*) (opcode + 1))].as_int64;
-    //     ++vm.sp;
-    //     vm.ip += 3;
-    //     break;
-    // }
-    // case ISTORE:
-    // {
-    //     vm.stack[vm.bp + *((uint16_t*) (opcode + 1))].as_int64 = vm.stack[vm.sp].as_int64;
-    //     --vm.sp;
-    //     vm.ip += 3;
-    //     break;
-    // }
-    // case ILOADG:
-    // {
-    //     vm.stack[vm.sp + 1].as_int64 = vm.stack[*((uint16_t*) (opcode + 1))].as_int64;
-    //     ++vm.sp;
-    //     vm.ip += 3;
-    //     break;
-    // }
-    // case ISTOREG:
-    // {
-    //     vm.stack[*((uint16_t*) (opcode + 1))].as_int64 = vm.stack[vm.sp].as_int64;
-    //     --vm.sp;
-    //     vm.ip += 3;
-    //     break;
-    // }
     case IINC:
     {
         vm.stack[vm.sp].as_int64++;
@@ -326,8 +290,7 @@ void exec_opcode(uint8_t* opcode)
     }
     case IABS:
     {
-        if (vm.stack[vm.sp].as_int64 < 0)
-            vm.stack[vm.sp].as_int64 *= -1;
+        vm.stack[vm.sp].as_int64 = llabs(vm.stack[vm.sp].as_int64);
         ++vm.ip;
         break;
     }
@@ -465,7 +428,6 @@ void exec_opcode(uint8_t* opcode)
     }
     case I8CONST:
     {
-        // Load 1-byte constant and sign-extend to int64
         int8_t val = (int8_t)opcode[1];
         vm.stack[++vm.sp].as_int64 = (int64_t)val;
         vm.ip += 2;
@@ -473,7 +435,6 @@ void exec_opcode(uint8_t* opcode)
     }
     case I16CONST:
     {
-        // Load 2-byte constant and sign-extend to int64
         int16_t val = *((int16_t*)(opcode + 1));
         vm.stack[++vm.sp].as_int64 = (int64_t)val;
         vm.ip += 3;
@@ -481,7 +442,6 @@ void exec_opcode(uint8_t* opcode)
     }
     case I32CONST:
     {
-        // Load 4-byte constant and sign-extend to int64
         int32_t val = *((int32_t*)(opcode + 1));
         vm.stack[++vm.sp].as_int64 = (int64_t)val;
         vm.ip += 5;
@@ -901,17 +861,6 @@ void vm_dasm()
     for (size_t i = 0; i < vm.program.used; i++)
     {
         opcode_t opcode = OPCODES[vm.program.data[i]];
-
-        // int opcode_index = -1;
-        // for (int j = 0; j<sizeof (OPCODES) / sizeof (OPCODES[0]); j++)
-        // {
-        //     if (OPCODES[j].code == vm.program.data[i])
-        //     {
-        //         opcode_index = j;
-        //         break;
-        //     }
-        // }
-        // opcode_t opcode = OPCODES[opcode_index];
 
         printf("%lx\t %s", i, opcode.name);
 
