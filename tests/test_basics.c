@@ -280,6 +280,60 @@ static void test_string_literal(test_suite_t* suite)
     TEST_ASSERT_STR_EQ(captured_output, "hello", "should print hello");
 }
 
+static void test_utf8_string_basic(test_suite_t* suite)
+{
+    capture_stdout_start();
+    compile_and_run("print \"Hello 世界\"\n");
+    capture_stdout_end();
+    
+    TEST_ASSERT_STR_EQ(captured_output, "Hello 世界", "should print UTF-8 string with Chinese characters");
+}
+
+static void test_utf8_string_emoji(test_suite_t* suite)
+{
+    capture_stdout_start();
+    compile_and_run("print \"Hello 🌍\"\n");
+    capture_stdout_end();
+    
+    TEST_ASSERT_STR_EQ(captured_output, "Hello 🌍", "should print UTF-8 string with emoji");
+}
+
+static void test_utf8_string_mixed(test_suite_t* suite)
+{
+    capture_stdout_start();
+    compile_and_run("print \"Привет мир! こんにちは\"\n");
+    capture_stdout_end();
+    
+    TEST_ASSERT_STR_EQ(captured_output, "Привет мир! こんにちは", "should print UTF-8 string with Cyrillic and Japanese");
+}
+
+static void test_utf8_string_variable(test_suite_t* suite)
+{
+    capture_stdout_start();
+    compile_and_run("var msg = \"Hello 世界\"\nprint msg\n");
+    capture_stdout_end();
+    
+    TEST_ASSERT_STR_EQ(captured_output, "Hello 世界", "should store and print UTF-8 string from variable");
+}
+
+static void test_utf8_string_reassign(test_suite_t* suite)
+{
+    capture_stdout_start();
+    compile_and_run("var s = \"hello\"\ns = \"世界\"\nprint s\n");
+    capture_stdout_end();
+    
+    TEST_ASSERT_STR_EQ(captured_output, "世界", "should reassign UTF-8 string to variable");
+}
+
+static void test_utf8_string_multibyte(test_suite_t* suite)
+{
+    capture_stdout_start();
+    compile_and_run("print \"€\"\n");
+    capture_stdout_end();
+    
+    TEST_ASSERT_STR_EQ(captured_output, "€", "should print 3-byte UTF-8 character (Euro sign)");
+}
+
 static void test_multiple_prints(test_suite_t* suite)
 {
     capture_stdout_start();
@@ -404,6 +458,12 @@ int main(void)
         {"logical_or", test_logical_or},
         {"unary_minus", test_unary_minus},
         {"string_literal", test_string_literal},
+        {"utf8_string_basic", test_utf8_string_basic},
+        {"utf8_string_emoji", test_utf8_string_emoji},
+        {"utf8_string_mixed", test_utf8_string_mixed},
+        {"utf8_string_variable", test_utf8_string_variable},
+        {"utf8_string_reassign", test_utf8_string_reassign},
+        {"utf8_string_multibyte", test_utf8_string_multibyte},
         {"multiple_prints", test_multiple_prints},
         {"complex_expression", test_complex_expression},
         {"function_in_expression", test_function_in_expression},

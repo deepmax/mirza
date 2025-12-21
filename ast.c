@@ -2,6 +2,7 @@
 #include "vm.h"
 #include "jump.h"
 #include "panic.h"
+#include "utf8.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -107,7 +108,7 @@ type_t eval_constant(ast_constant_t* ast)
     else if (ast->type == MT_STR)
     {
         uint16_t a = vm_data_addr();
-        vm_data_emit((uint8_t*)ast->value.as_str, strlen(ast->value.as_str) + 1);
+        vm_data_emit((uint8_t*)ast->value.as_str, utf8size((utf8_int8_t*)ast->value.as_str));
         EMIT(ACONST, NUM16(a));
     }
     return ast->type;

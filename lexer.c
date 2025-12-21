@@ -1,6 +1,7 @@
 #include "lexer.h"
 #include "token.h"
 #include "buffer.h"
+#include "utf8.h"
 #include <stdio.h>
 #include <ctype.h>
 #include <stdlib.h>
@@ -413,8 +414,16 @@ token_t lexer_next()
             buffer_add(&str, 0);
             buffer_shrink(&str);
 
-            token.type = TK_STR;
-            token.value.as_str = (char*) str.data;
+            // Validate UTF-8 encoding
+            if (utf8valid((utf8_int8_t*)str.data) != NULL)
+            {
+                token.type = TK_BAD;
+            }
+            else
+            {
+                token.type = TK_STR;
+                token.value.as_str = (char*) str.data;
+            }
         }
     }
 

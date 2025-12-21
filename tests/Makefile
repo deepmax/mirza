@@ -86,11 +86,11 @@ $(BUILD)/tests.o: tests.c tests.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 # Build compiler test executables
-$(BUILD)/test_lvl1: test_lvl1.c $(COMPILER_OBJECTS) $(BUILD)/tests.o
+$(BUILD)/test_basics: test_basics.c $(COMPILER_OBJECTS) $(BUILD)/tests.o
 	mkdir -p $(BUILD)
 	$(CC) $(CFLAGS) $< $(COMPILER_OBJECTS) $(BUILD)/tests.o $(LIBS) -o $@
 
-$(BUILD)/test_lvl2: test_lvl2.c $(COMPILER_OBJECTS) $(BUILD)/tests.o
+$(BUILD)/test_int: test_int.c $(COMPILER_OBJECTS) $(BUILD)/tests.o
 	mkdir -p $(BUILD)
 	$(CC) $(CFLAGS) $< $(COMPILER_OBJECTS) $(BUILD)/tests.o $(LIBS) -o $@
 
@@ -133,11 +133,11 @@ test-list: $(BUILD)/test_list
 test-buffer: $(BUILD)/test_buffer
 	$(BUILD)/test_buffer
 
-test-lvl1: $(BUILD)/test_lvl1
-	$(BUILD)/test_lvl1
+test-basics: $(BUILD)/test_basics
+	$(BUILD)/test_basics
 
-test-lvl2: $(BUILD)/test_lvl2
-	$(BUILD)/test_lvl2
+test-int: $(BUILD)/test_int
+	$(BUILD)/test_int
 
 # Prevent make from trying to build arguments as targets
 %:
