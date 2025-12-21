@@ -1,4 +1,5 @@
 #include "vm.h"
+#include "utf8.h"
 #include "buffer.h"
 #include "vector.h"
 #include <stdio.h>
@@ -6,6 +7,7 @@
 #include <stdarg.h>
 #include <math.h>
 #include <inttypes.h>
+#include <string.h>
 
 typedef struct
 {
@@ -49,6 +51,7 @@ const opcode_t OPCODES[] = {
     {IDIV, 0, "idiv"},
     {IMOD, 0, "imod"},
     {IMUL, 0, "imul"},
+    {IPOW, 0, "ipow"},
     {IAND, 0, "iand"},
     {IOR, 0, "ior"},
     {IBXOR, 0, "ibxor"},
@@ -121,6 +124,7 @@ const opcode_t OPCODES[] = {
     {ASTOREG, 2, "astoreg"},
     {ACONST, 2, "aconst"},
     {APRINT, 0, "aprint"},
+    {ALEN, 0, "alen"},
     // XLOAD
     // XLOADG
     // XSTORE
@@ -317,6 +321,13 @@ void exec_opcode(uint8_t* opcode)
     case IMUL:
     {
         vm.stack[vm.sp - 1].as_int64 = vm.stack[vm.sp - 1].as_int64 * vm.stack[vm.sp].as_int64;
+        --vm.sp;
+        ++vm.ip;
+        break;
+    }
+    case IPOW:
+    {
+        vm.stack[vm.sp - 1].as_int64 = (int64_t)pow((double)vm.stack[vm.sp - 1].as_int64, (double)vm.stack[vm.sp].as_int64);
         --vm.sp;
         ++vm.ip;
         break;
@@ -820,6 +831,16 @@ void exec_opcode(uint8_t* opcode)
         printf("%s", &vm.data.data[vm.stack[vm.sp].as_uint16]);
         fflush(stdout);
         --vm.sp;
+        ++vm.ip;
+        break;
+    }
+    case ALEN:
+    {
+        // Get string address from stack
+        uint16_t str_addr = vm.stack[vm.sp].as_uint16;
+        // Calculate length (excluding null terminator)
+        const char* str = (const char*)&vm.data.data[str_addr];
+        vm.stack[vm.sp].as_int64 = (int64_t)utf8len(str);
         ++vm.ip;
         break;
     }

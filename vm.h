@@ -31,6 +31,7 @@ enum
     IDIV,
     IMOD,
     IMUL,
+    IPOW,
     IAND,
     IOR,
     IBXOR,
@@ -105,6 +106,7 @@ enum
     ASTOREG,
     ACONST,
     APRINT,
+    ALEN,
     // XLOAD
     // XLOADG
     // XSTORE

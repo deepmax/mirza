@@ -6,6 +6,7 @@
 #include "vm.h"
 #include "context.h"
 #include "panic.h"
+#include "builtin.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -172,6 +173,9 @@ ast_t* var()
 
     match(TK_IDENT);
 
+    if (builtin_is_reserved(id))
+        panic("Cannot use builtin function name as identifier.");
+
     if (context_get(context, id, true) != NULL)
         panic("Identifier is already defined.");
 
@@ -198,11 +202,13 @@ ast_t* ident()
     if (look.type == TK_ASSIGN)
         return assign(id);
 
-    if (context_get(context, id, false) == NULL)
-        panic("Identifier is not defined.");
-
+    // Check if it's a function call (builtin or user function)
     if (look.type == TK_L_PAREN)
         return func_call(id);
+
+    // Not a function call, must be a variable
+    if (context_get(context, id, false) == NULL)
+        panic("Identifier is not defined.");
 
     return (ast_t*) ast_new_variable(context_get(context, id, false));
 }
@@ -378,6 +384,9 @@ ast_t* func_decl()
     const char* id = peek_ident();
     match(TK_IDENT);
 
+    if (builtin_is_reserved(id))
+        panic("Cannot use builtin function name as identifier.");
+
     if (context_get(context, id, false) != NULL)
         panic("Identifier is already defined.");
 
@@ -422,6 +431,43 @@ ast_t* func_ret()
 
 ast_t* func_call(const char* id)
 {
+    // Check for builtin function first
+    const builtin_func_t* builtin = builtin_lookup(id);
+    
+    if (builtin != NULL)
+    {
+        // Builtin function found - create a special symbol for it
+        // We'll use a special addr value (0xFFFF) to mark it as builtin
+        symbol_t* builtin_symbol = malloc(sizeof(symbol_t));
+        builtin_symbol->id = id;
+        builtin_symbol->type = MT_FUNC;
+        builtin_symbol->ret_type = builtin->ret_type;
+        builtin_symbol->addr = 0xFFFF;  // Special marker for builtin functions
+        builtin_symbol->global = true;
+        
+        match(TK_L_PAREN);
+
+        vector_t* args = vec_new(0);
+
+        while (look.type != TK_R_PAREN)
+        {
+            vec_append(args, expression());
+            if (look.type == TK_R_PAREN)
+                break;
+            match(TK_COMMA);
+        }
+        match(TK_R_PAREN);
+        
+        // Validate argument count
+        if (vec_size(args) != builtin->arg_count)
+        {
+            panic("Builtin function argument count mismatch.");
+        }
+
+        return (ast_t*) ast_new_func_call(builtin_symbol, args);
+    }
+    
+    // Not a builtin, check context
     symbol_t* s = context_get(context, id, false);
 
     if (s == NULL)

@@ -3,6 +3,7 @@
 #include "jump.h"
 #include "panic.h"
 #include "utf8.h"
+#include "builtin.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -474,8 +475,51 @@ type_t eval_func_return(ast_func_return_t* ast)
     return out;
 }
 
+// Helper function to check if a type is in the acceptable types array
+static bool is_type_acceptable(type_t type, const type_t* acceptable_types)
+{
+    if (acceptable_types == NULL)
+        return true;  // No type restrictions
+    
+    for (size_t i = 0; acceptable_types[i] != MT_UNKNOWN; i++)
+    {
+        if (acceptable_types[i] == type)
+            return true;
+    }
+    return false;
+}
+
 type_t eval_func_call(ast_func_call_t* ast)
 {
+    // Check if this is a builtin function (marked by special addr value)
+    if (ast->symbol->addr == 0xFFFF)
+    {
+        // Look up the builtin function by name
+        const builtin_func_t* builtin = builtin_lookup(ast->symbol->id);
+        if (builtin == NULL)
+        {
+            panic("Builtin function not found.");
+        }
+        
+        // Evaluate arguments and check types
+        for (size_t i = 0; i < vec_size(ast->args); i++)
+        {
+            type_t arg_type = eval(vec_get(ast->args, i));
+            
+            // Check if the argument type is acceptable
+            if (!is_type_acceptable(arg_type, builtin->acceptable_types))
+            {
+                panic("Builtin function argument type mismatch.");
+            }
+        }
+        
+        // Emit the builtin function opcode
+        EMIT(builtin->opcode);
+        
+        return builtin->ret_type;
+    }
+    
+    // Regular user function call
     for (size_t i = 0; i < vec_size(ast->args); i++)
         eval(vec_get(ast->args, i));
     EMIT(CALL, NUM16(ast->symbol->addr));
