@@ -28,7 +28,7 @@ static const builtin_func_t BUILTIN_FUNCTIONS[] = {
     {"rceil", 1, MT_REAL, RCEIL, true, REAL_TYPES},
     {"rfloor", 1, MT_REAL, RFLOOR, true, REAL_TYPES},
     {"rround", 1, MT_REAL, RROUND, true, REAL_TYPES},
-    {"len", 1, MT_INT64, ALEN, true, STR_TYPES},
+    {"slen", 1, MT_INT64, SLEN, true, STR_TYPES},
 };
 
 #define BUILTIN_COUNT (sizeof(BUILTIN_FUNCTIONS) / sizeof(BUILTIN_FUNCTIONS[0]))

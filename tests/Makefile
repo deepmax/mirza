@@ -13,7 +13,7 @@ TEST_TARGETS = $(patsubst test_%.c, $(BUILD)/test_%, $(TEST_SOURCES))
 SOURCE_FILES = ../vector.c ../list.c ../buffer.c
 
 # Compiler source files
-COMPILER_SOURCES = ../ast.c ../buffer.c ../context.c ../jump.c ../lexer.c ../list.c ../panic.c ../parser.c ../vector.c ../vm.c
+COMPILER_SOURCES = ../ast.c ../buffer.c ../builtin.c ../context.c ../jump.c ../lexer.c ../list.c ../panic.c ../parser.c ../vector.c ../vm.c
 COMPILER_OBJECTS = $(patsubst ../%.c, $(BUILD)/%.o, $(COMPILER_SOURCES))
 
 # Test helper source
@@ -60,6 +60,10 @@ $(BUILD)/panic.o: ../panic.c ../panic.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(BUILD)/parser.o: ../parser.c ../parser.h
+	mkdir -p $(BUILD)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(BUILD)/builtin.o: ../builtin.c ../builtin.h
 	mkdir -p $(BUILD)
 	$(CC) $(CFLAGS) -c $< -o $@
 

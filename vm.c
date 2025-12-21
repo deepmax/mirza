@@ -1,7 +1,6 @@
 #include "vm.h"
 #include "utf8.h"
 #include "buffer.h"
-#include "vector.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -110,21 +109,17 @@ const opcode_t OPCODES[] = {
     {RNQ, 0, "rnq"},
     {RLOAD, 2, "rload"},
     {RSTORE, 2, "rstore"},
-    {RLOADG, 2, "rloadg"},
-    {RSTOREG, 2, "rstoreg"},
     {RCONST, 8, "rconst"},
     {RCONST_0, 0, "rconst_0"},
     {RCONST_1, 0, "rconst_1"},
     {RCONST_PI, 0, "rconst_pi"},
     {RPRINT, 0, "rprint"},
     {RTOI, 0, "rtoi"},
-    {ALOAD, 2, "aload"},
-    {ASTORE, 2, "astore"},
-    {ALOADG, 2, "aloadg"},
-    {ASTOREG, 2, "astoreg"},
-    {ACONST, 2, "aconst"},
-    {APRINT, 0, "aprint"},
-    {ALEN, 0, "alen"},
+    {SLOAD, 2, "sload"},
+    {SSTORE, 2, "sstore"},
+    {SCONST, 2, "sconst"},
+    {SPRINT, 0, "sprint"},
+    {SLEN, 0, "slen"},
     // XLOAD
     // XLOADG
     // XSTORE
@@ -547,20 +542,6 @@ void exec_opcode(uint8_t* opcode)
         vm.ip += 3;
         break;
     }
-    case RLOADG:
-    {
-        vm.stack[vm.sp + 1].as_real = vm.stack[*((uint16_t*) (opcode + 1))].as_real;
-        ++vm.sp;
-        vm.ip += 3;
-        break;
-    }
-    case RSTOREG:
-    {
-        vm.stack[*((uint16_t*) (opcode + 1))].as_real = vm.stack[vm.sp].as_real;
-        --vm.sp;
-        vm.ip += 3;
-        break;
-    }
     case RINC:
     {
         vm.stack[vm.sp].as_real++;
@@ -792,41 +773,27 @@ void exec_opcode(uint8_t* opcode)
         ++vm.ip;
         break;
     }
-    case ALOAD:
+    case SLOAD:
     {
         vm.stack[vm.sp + 1].as_uint16 = vm.stack[vm.bp + *((uint16_t*) (opcode + 1))].as_uint16;
         ++vm.sp;
         vm.ip += 3;
         break;
     }
-    case ASTORE:
+    case SSTORE:
     {
         vm.stack[vm.bp + *((uint16_t*) (opcode + 1))].as_uint16 = vm.stack[vm.sp].as_uint16;
         --vm.sp;
         vm.ip += 3;
         break;
     }
-    case ALOADG:
-    {
-        vm.stack[vm.sp + 1].as_uint16 = vm.stack[*((uint16_t*) (opcode + 1))].as_uint16;
-        ++vm.sp;
-        vm.ip += 3;
-        break;
-    }
-    case ASTOREG:
-    {
-        vm.stack[*((uint16_t*) (opcode + 1))].as_uint16 = vm.stack[vm.sp].as_uint16;
-        --vm.sp;
-        vm.ip += 3;
-        break;
-    }
-    case ACONST:
+    case SCONST:
     {
         vm.stack[++vm.sp].as_int16 = *((uint16_t*) (opcode + 1));
         vm.ip += 3;
         break;
     }
-    case APRINT:
+    case SPRINT:
     {
         printf("%s", &vm.data.data[vm.stack[vm.sp].as_uint16]);
         fflush(stdout);
@@ -834,7 +801,7 @@ void exec_opcode(uint8_t* opcode)
         ++vm.ip;
         break;
     }
-    case ALEN:
+    case SLEN:
     {
         // Get string address from stack
         uint16_t str_addr = vm.stack[vm.sp].as_uint16;

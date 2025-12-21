@@ -110,7 +110,7 @@ type_t eval_constant(ast_constant_t* ast)
     {
         uint16_t a = vm_data_addr();
         vm_data_emit((uint8_t*)ast->value.as_str, utf8size((utf8_int8_t*)ast->value.as_str));
-        EMIT(ACONST, NUM16(a));
+        EMIT(SCONST, NUM16(a));
     }
     return ast->type;
 }
@@ -292,7 +292,7 @@ type_t eval_print(ast_print_t* ast)
     }
     else if (out == MT_STR)
     {
-        EMIT(APRINT);
+        EMIT(SPRINT);
     }
     else
     {
@@ -315,10 +315,10 @@ type_t eval_variable(ast_variable_t* ast)
         // Operations will convert to int64 if needed
         return var_type;
     } else if (var_type == MT_REAL) {
-        if (is_global) EMIT(RLOADG, NUM16(addr));
+        if (is_global) EMIT(RLOAD, NUM16(addr));
         else EMIT(RLOAD, NUM16(addr));
     } else if (var_type == MT_STR) {
-        EMIT(ALOAD, NUM16(addr));
+        EMIT(SLOAD, NUM16(addr));
     }
     return var_type;
 }
@@ -348,10 +348,10 @@ type_t eval_assign(ast_assign_t* ast)
     if (is_integer_type(var_type)) {
         EMIT(ISTORE, var_type, NUM16(addr), is_global ? 1 : 0);
     } else if (var_type == MT_REAL) {
-        if (is_global) EMIT(RSTOREG, NUM16(addr));
+        if (is_global) EMIT(RSTORE, NUM16(addr));
         else EMIT(RSTORE, NUM16(addr));
     } else if (var_type == MT_STR) {
-        EMIT(ASTORE, NUM16(addr));
+        EMIT(SSTORE, NUM16(addr));
     }
 
     return var_type;
