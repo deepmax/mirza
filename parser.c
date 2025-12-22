@@ -338,12 +338,6 @@ ast_t* semicolon()
     return NULL;
 }
 
-ast_t* print()
-{
-    match(TK_PRINT);
-    return (ast_t*) ast_new_print(expression());
-}
-
 ast_t* block(block_t type, vector_t* params)
 {
     match(TK_L_BRACE);
@@ -457,8 +451,8 @@ ast_t* func_call(const char* id)
         }
         match(TK_R_PAREN);
         
-        // Validate argument count
-        if (vec_size(args) != builtin->arg_count)
+        // Validate argument count (255 means variadic, skip check)
+        if (builtin->arg_count != 255 && vec_size(args) != builtin->arg_count)
         {
             panic("Builtin function argument count mismatch.");
         }
@@ -548,8 +542,6 @@ ast_t* statement()
         return semicolon();
     case TK_VAR:
         return var();
-    case TK_PRINT:
-        return print();
     case TK_IF:
         return if_cond();
     case TK_L_BRACE:

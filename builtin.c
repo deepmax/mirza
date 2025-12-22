@@ -8,9 +8,11 @@ static const type_t INTEGER_TYPES[] = {MT_INT8, MT_INT16, MT_INT32, MT_INT64, MT
 static const type_t REAL_TYPES[] = {MT_REAL, MT_UNKNOWN};
 static const type_t STR_TYPES[] = {MT_STR, MT_UNKNOWN};
 static const type_t NUMERIC_TYPES[] = {MT_INT8, MT_INT16, MT_INT32, MT_INT64, MT_REAL, MT_UNKNOWN};
+static const type_t PRINT_TYPES[] = {MT_INT8, MT_INT16, MT_INT32, MT_INT64, MT_REAL, MT_STR, MT_UNKNOWN};
 
 // Builtin function registry
 static const builtin_func_t BUILTIN_FUNCTIONS[] = {
+    {"print", 255, MT_VOID, 0, true, PRINT_TYPES},  // arg_count 255 means variadic, opcode 0 means dispatch based on type
     {"abs", 1, MT_UNKNOWN, 0, true, NUMERIC_TYPES},  // opcode 0 means dispatch based on type
     {"mod", 2, MT_REAL, RMOD, true, REAL_TYPES},
     {"pow", 2, MT_REAL, RPOW, true, REAL_TYPES},
@@ -33,6 +35,9 @@ static const builtin_func_t BUILTIN_FUNCTIONS[] = {
 
 // TODO: inc and dec for integer and real types need passing address of the variable to the builtin function
 // so that they so a inplace operation on the variable
+
+// TODO: make a general len instead of slen ...
+
 
 #define BUILTIN_COUNT (sizeof(BUILTIN_FUNCTIONS) / sizeof(BUILTIN_FUNCTIONS[0]))
 

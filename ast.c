@@ -282,33 +282,6 @@ type_t eval_binary(ast_binary_t* ast)
     return MT_UNKNOWN;
 }
 
-type_t eval_print(ast_print_t* ast)
-{
-    type_t out = eval(ast->expr);
-
-    if (is_integer_type(out))
-    {
-        // All integer types are represented as int64 on the stack
-        // No conversion needed for printing (value is already in int64 format)
-        EMIT(IPRINT);
-    }
-    else if (out == MT_REAL)
-    {
-        EMIT(RPRINT);
-    }
-    else if (out == MT_STR)
-    {
-        EMIT(SPRINT);
-    }
-    else
-    {
-        panic("Print error. Unknown type.");
-        return MT_UNKNOWN;
-    }
-    
-    return out;
-}
-
 type_t eval_variable(ast_variable_t* ast)
 {
     type_t var_type = ast->symbol->type;
@@ -501,7 +474,44 @@ static type_t eval_builtin_func(ast_func_call_t* ast)
         panic("Builtin function not found.");
     }
     
-    // Evaluate arguments and check types
+    // Special handling for print: evaluate and print each argument in sequence
+    if (strcmp(builtin->name, "print") == 0)
+    {
+        // Loop through all arguments, evaluate and print each one
+        for (size_t i = 0; i < vec_size(ast->args); i++)
+        {
+            // Evaluate each argument (this pushes it onto the stack)
+            type_t current_arg_type = eval(vec_get(ast->args, i));
+            
+            // Check if the argument type is acceptable
+            if (!is_type_acceptable(current_arg_type, builtin->acceptable_types))
+            {
+                panic("Builtin function argument type mismatch.");
+            }
+            
+            // Emit the appropriate print opcode based on the argument type
+            if (is_integer_type(current_arg_type))
+            {
+                // All integer types are represented as int64 on the stack
+                EMIT(IPRINT);
+            }
+            else if (current_arg_type == MT_REAL)
+            {
+                EMIT(RPRINT);
+            }
+            else if (current_arg_type == MT_STR)
+            {
+                EMIT(SPRINT);
+            }
+            else
+            {
+                panic("Print error. Unknown type.");
+            }
+        }
+        return MT_VOID;  // print returns void
+    }
+    
+    // For other builtin functions, evaluate arguments and check types
     type_t arg_type = MT_UNKNOWN;
     for (size_t i = 0; i < vec_size(ast->args); i++)
     {
@@ -626,15 +636,6 @@ ast_binary_t* ast_new_binary(token_type_t op, ast_t* lhs_expr, ast_t* rhs_expr)
     ast_binary->lhs_expr = lhs_expr;
     ast_binary->rhs_expr = rhs_expr;
     return ast_binary;
-}
-
-ast_print_t* ast_new_print(ast_t* expr)
-{
-    ast_print_t* ast_print = malloc(sizeof (ast_print_t));
-    ast_print->base = ast_new();
-    ast_print->base->eval = (eval_t) eval_print;
-    ast_print->expr = expr;
-    return ast_print;
 }
 
 ast_variable_t* ast_new_variable(symbol_t* symbol)

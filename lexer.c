@@ -33,7 +33,6 @@ static const keyword_t KEYWORDS[] = {
     {"break", TK_BREAK},
     {"continue", TK_CONTINUE},
     {"ret", TK_RETURN},
-    {"print", TK_PRINT},
     {"read", TK_READ},
     {"quit", TK_QUIT},
     {"and", TK_AND},
