@@ -19,8 +19,18 @@ typedef struct
     const type_t* acceptable_types;  // Array of acceptable argument types, terminated by MT_UNKNOWN
 } builtin_func_t;
 
+typedef struct
+{
+    const char* name;
+    type_t type;
+    uint8_t opcode;  // VM opcode to emit for this constant
+} builtin_constant_t;
+
 // Lookup a builtin function by name
 const builtin_func_t* builtin_lookup(const char* name);
+
+// Lookup a builtin constant by name
+const builtin_constant_t* builtin_constant_lookup(const char* name);
 
 // Check if a name is a builtin function (for name collision prevention)
 bool_t builtin_is_reserved(const char* name);

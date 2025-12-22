@@ -84,6 +84,14 @@ static void emit_conversion(type_t from, type_t to)
 
 type_t eval_constant(ast_constant_t* ast)
 {
+    // If opcode is set, emit it directly (for builtin constants)
+    if (ast->opcode != 0)
+    {
+        EMIT(ast->opcode);
+        return ast->type;
+    }
+    
+    // Otherwise, use value-based logic
     if (is_integer_type(ast->type))
     {
         emit_integer_constant(ast->type, ast->value);
@@ -614,6 +622,18 @@ ast_constant_t* ast_new_constant(type_t type, value_t value)
     ast_constant->base->eval = (eval_t) eval_constant;
     ast_constant->type = type;
     ast_constant->value = value;
+    ast_constant->opcode = 0;  // Use value-based logic
+    return ast_constant;
+}
+
+ast_constant_t* ast_new_builtin_constant(type_t type, uint8_t opcode)
+{
+    ast_constant_t* ast_constant = malloc(sizeof (ast_constant_t));
+    ast_constant->base = ast_new();
+    ast_constant->base->eval = (eval_t) eval_constant;
+    ast_constant->type = type;
+    ast_constant->value.as_real = 0.0;  // Dummy value, not used
+    ast_constant->opcode = opcode;  // Use opcode directly
     return ast_constant;
 }
 

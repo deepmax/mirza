@@ -202,6 +202,18 @@ ast_t* ident()
     if (look.type == TK_ASSIGN)
         return assign(id);
 
+    // Check if it's a builtin constant
+    const builtin_constant_t* constant = builtin_constant_lookup(id);
+    if (constant != NULL)
+    {
+        // Builtin constants cannot be followed by parentheses (they're not functions)
+        if (look.type == TK_L_PAREN)
+            panic("Builtin constant cannot be called as a function.");
+        
+        // Create a builtin constant AST node with the appropriate type and opcode
+        return (ast_t*) ast_new_builtin_constant(constant->type, constant->opcode);
+    }
+
     // Check if it's a function call (builtin or user function)
     if (look.type == TK_L_PAREN)
         return func_call(id);

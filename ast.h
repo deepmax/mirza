@@ -27,6 +27,7 @@ typedef struct
     ast_t* base;
     type_t type;
     value_t value;
+    uint8_t opcode;  // VM opcode to emit for builtin constants (0 means use value-based logic)
 } ast_constant_t;
 
 typedef struct
@@ -129,6 +130,7 @@ void halt();
 
 ast_t* ast_new();
 ast_constant_t* ast_new_constant(type_t type, value_t value);
+ast_constant_t* ast_new_builtin_constant(type_t type, uint8_t opcode);
 ast_unary_t* ast_new_unary(token_type_t op, ast_t* expr);
 ast_binary_t* ast_new_binary(token_type_t op, ast_t* lhs_expr, ast_t* rhs_expr);
 ast_print_t* ast_new_print(ast_t* expr);

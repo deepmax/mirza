@@ -10,6 +10,11 @@ static const type_t STR_TYPES[] = {MT_STR, MT_UNKNOWN};
 static const type_t NUMERIC_TYPES[] = {MT_INT8, MT_INT16, MT_INT32, MT_INT64, MT_REAL, MT_UNKNOWN};
 static const type_t PRINT_TYPES[] = {MT_INT8, MT_INT16, MT_INT32, MT_INT64, MT_REAL, MT_STR, MT_UNKNOWN};
 
+// Builtin constant registry
+static const builtin_constant_t BUILTIN_CONSTANTS[] = {
+    {"pi", MT_REAL, RCONST_PI},
+};
+
 // Builtin function registry
 static const builtin_func_t BUILTIN_FUNCTIONS[] = {
     {"print", 255, MT_VOID, 0, true, PRINT_TYPES},  // arg_count 255 means variadic, opcode 0 means dispatch based on type
@@ -29,7 +34,6 @@ static const builtin_func_t BUILTIN_FUNCTIONS[] = {
     {"ceil", 1, MT_REAL, RCEIL, true, REAL_TYPES},
     {"floor", 1, MT_REAL, RFLOOR, true, REAL_TYPES},
     {"round", 1, MT_REAL, RROUND, true, REAL_TYPES},
-    {"pi", 0, MT_REAL, RCONST_PI, true, NULL},
     {"slen", 1, MT_INT64, SLEN, true, STR_TYPES},
 };
 
@@ -40,6 +44,7 @@ static const builtin_func_t BUILTIN_FUNCTIONS[] = {
 
 
 #define BUILTIN_COUNT (sizeof(BUILTIN_FUNCTIONS) / sizeof(BUILTIN_FUNCTIONS[0]))
+#define BUILTIN_CONSTANT_COUNT (sizeof(BUILTIN_CONSTANTS) / sizeof(BUILTIN_CONSTANTS[0]))
 
 const builtin_func_t* builtin_lookup(const char* name)
 {
@@ -53,8 +58,20 @@ const builtin_func_t* builtin_lookup(const char* name)
     return NULL;
 }
 
+const builtin_constant_t* builtin_constant_lookup(const char* name)
+{
+    for (size_t i = 0; i < BUILTIN_CONSTANT_COUNT; i++)
+    {
+        if (strcmp(BUILTIN_CONSTANTS[i].name, name) == 0)
+        {
+            return &BUILTIN_CONSTANTS[i];
+        }
+    }
+    return NULL;
+}
+
 bool_t builtin_is_reserved(const char* name)
 {
-    return builtin_lookup(name) != NULL;
+    return builtin_lookup(name) != NULL || builtin_constant_lookup(name) != NULL;
 }
 
