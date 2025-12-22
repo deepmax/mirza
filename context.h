@@ -15,7 +15,12 @@ typedef struct
     const char* id;
     type_t type;
     uint16_t addr;
-    type_t ret_type;  // For functions: stores the return type
+    union {
+        struct {
+            type_t ret_type;
+            vector_t* param_types;  // Array of parameter types
+        } func;
+    } extra;
 } symbol_t;
 
 typedef struct

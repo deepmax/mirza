@@ -421,7 +421,17 @@ ast_t* func_decl()
     type_t ret_type = data_type();
 
     s->type = MT_FUNC;
-    s->ret_type = ret_type;  // Store return type in symbol
+    s->extra.func.ret_type = ret_type;  // Store return type in symbol
+    
+    // Store parameter types from params vector (already collected above)
+    s->extra.func.param_types = vec_new(0);
+    for (size_t i = 0; i < vec_size(params); i++)
+    {
+        param_t* param = vec_get(params, i);
+        type_t* param_type = malloc(sizeof(type_t));
+        *param_type = param->type;
+        vec_append(s->extra.func.param_types, param_type);
+    }
 
     return (ast_t*) ast_new_func_decl(s, (ast_block_t*) block(MB_FUNC, params), vec_size(params), ret_type);
 }
@@ -447,7 +457,8 @@ ast_t* func_call(const char* id)
         symbol_t* builtin_symbol = malloc(sizeof(symbol_t));
         builtin_symbol->id = id;
         builtin_symbol->type = MT_FUNC;
-        builtin_symbol->ret_type = builtin->ret_type;
+        builtin_symbol->extra.func.ret_type = builtin->ret_type;
+        builtin_symbol->extra.func.param_types = NULL;  // Builtins don't use param_types for type checking
         builtin_symbol->addr = 0xFFFF;  // Special marker for builtin functions
         
         match(TK_L_PAREN);

@@ -123,6 +123,26 @@ type_t eval_constant(ast_constant_t* ast)
     return ast->type;
 }
 
+// Helper function to get the original type of an AST node for type checking
+// For constants, this returns the original type before normalization
+// For other expressions, we evaluate to get the type
+static type_t get_expr_type_for_checking(ast_t* ast)
+{
+    if (ast == NULL)
+        return MT_UNKNOWN;
+    
+    // For constants, return the original type (before normalization to int64)
+    if (ast->base->eval == (eval_t) eval_constant)
+    {
+        ast_constant_t* constant = (ast_constant_t*) ast;
+        return constant->type;
+    }
+    
+    // For other expressions, evaluate to get the type
+    // Note: This will emit code, but we need the type information
+    return eval(ast);
+}
+
 type_t eval_unary(ast_unary_t* ast)
 {
     type_t out = eval(ast->expr);
@@ -570,13 +590,50 @@ type_t eval_func_call(ast_func_call_t* ast)
         return eval_builtin_func(ast);
     }
     
-    // Regular user function call
+    // Regular user function call - check argument types
+    if (ast->symbol->extra.func.param_types == NULL)
+    {
+        panic("Function parameter types not available for type checking.");
+    }
+    
+    size_t param_count = vec_size(ast->symbol->extra.func.param_types);
+    size_t arg_count = vec_size(ast->args);
+    
+    // Check argument count
+    if (arg_count != param_count)
+    {
+        panic("Function argument count mismatch.");
+    }
+    
+    // Check argument types before evaluating (to preserve original types for constants)
+    for (size_t i = 0; i < arg_count; i++)
+    {
+        type_t* param_type_ptr = vec_get(ast->symbol->extra.func.param_types, i);
+        type_t param_type = *param_type_ptr;
+        ast_t* arg_expr = vec_get(ast->args, i);
+        
+        // Get the type of the argument expression
+        // For constants, this gives us the original type before normalization
+        type_t arg_type = get_expr_type_for_checking(arg_expr);
+        
+        // Check if types match exactly
+        // Integer types (INT8, INT16, INT32, INT64) are distinct from REAL
+        if (arg_type != param_type)
+        {
+            panic("Function argument type mismatch.");
+        }
+    }
+    
+    // Now evaluate all arguments to emit code
     for (size_t i = 0; i < vec_size(ast->args); i++)
+    {
         eval(vec_get(ast->args, i));
+    }
+    
     EMIT(CALL, NUM16(ast->symbol->addr));
     
     // Get function's return type and convert if needed
-    type_t ret_type = ast->symbol->ret_type;
+    type_t ret_type = ast->symbol->extra.func.ret_type;
     if (ret_type == MT_UNKNOWN || ret_type == MT_VOID) {
         ret_type = MT_INT64;  // Default to int64 if not set
     }
