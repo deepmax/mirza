@@ -1,18 +1,12 @@
-func factorial(n : int) : int
+var a = [1, 2, 3, 4]
+var b : array of str = ["Hello", "Bye"]
+
+for var i = 0; i < alen(a); inc(i)
 {
-    if n <= 1 {
-        ret 1
-    } else {
-        ret factorial(n - 1) * n
-    }
+    print a[i]
 }
 
-var k : int = 5
-
-while k > 0 {
-    print factorial(k)
-    print "\n"
-    k = k - 1
+for var i = 0; i < alen(b); inc(i)
+{
+    print b[i]
 }
-
-

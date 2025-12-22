@@ -74,8 +74,8 @@ const opcode_t OPCODES[] = {
     {I8CAST, 0, "i8cast"},
     {I16CAST, 0, "i16cast"},
     {I32CAST, 0, "i32cast"},
-    {ILOAD, 4, "iload"},
-    {ISTORE, 4, "istore"},
+    {ILOAD, 2, "iload"},
+    {ISTORE, 2, "istore"},
     {ITOR, 0, "itor"},
     {RINC, 0, "rinc"},
     {RDEC, 0, "rdec"},
@@ -145,29 +145,6 @@ void vm_free()
     buffer_free(&vm.data);
     buffer_free(&vm.program);
 }
-
-static void iload_value(value_t* dest, value_t* src, type_t type)
-{
-    switch (type) {
-        case MT_INT8:  dest->as_int64 = (int64_t)src->as_int8; break;
-        case MT_INT16: dest->as_int64 = (int64_t)src->as_int16; break;
-        case MT_INT32: dest->as_int64 = (int64_t)src->as_int32; break;
-        case MT_INT64: dest->as_int64 = src->as_int64; break;
-        default: break;
-    }
-}
-
-static void istore_value(value_t* dest, value_t* src, type_t type)
-{
-    switch (type) {
-        case MT_INT8:  dest->as_int8 = (int8_t)src->as_int64; break;
-        case MT_INT16: dest->as_int16 = (int16_t)src->as_int64; break;
-        case MT_INT32: dest->as_int32 = (int32_t)src->as_int64; break;
-        case MT_INT64: dest->as_int64 = src->as_int64; break;
-        default: break;
-    }
-}
-
 
 void exec_opcode(uint8_t* opcode)
 {
@@ -253,7 +230,11 @@ void exec_opcode(uint8_t* opcode)
     }
     case JEZ:
     {
-        if (vm.stack[vm.sp].as_int64 == 0)
+        // Check both int64 and real (for real comparison results)
+        // Real comparisons return 0.0 or 1.0, so we need to check as_real first
+        // to avoid reading as_int64 when the value is actually a real
+        int is_zero = (vm.stack[vm.sp].as_real == 0.0) || (vm.stack[vm.sp].as_int64 == 0);
+        if (is_zero)
             vm.ip = *((uint16_t*) (opcode + 1));
         else
             vm.ip += 3;
@@ -508,24 +489,16 @@ void exec_opcode(uint8_t* opcode)
     }
     case ILOAD:
     {
-        type_t type = (type_t)opcode[1];
-        uint16_t addr = *((uint16_t*)(opcode + 2));
-        uint8_t is_global = opcode[4];
-        value_t* src = is_global ? &vm.stack[addr] : &vm.stack[vm.bp + addr];
-        iload_value(&vm.stack[vm.sp + 1], src, type);
+        vm.stack[vm.sp + 1].as_int64 = vm.stack[vm.bp + *((uint16_t*) (opcode + 1))].as_int64;
         ++vm.sp;
-        vm.ip += 5;
+        vm.ip += 3;
         break;
     }
     case ISTORE:
     {
-        type_t type = (type_t)opcode[1];
-        uint16_t addr = *((uint16_t*)(opcode + 2));
-        uint8_t is_global = opcode[4];
-        value_t* dest = is_global ? &vm.stack[addr] : &vm.stack[vm.bp + addr];
-        istore_value(dest, &vm.stack[vm.sp], type);
+        vm.stack[vm.bp + *((uint16_t*) (opcode + 1))].as_int64 = vm.stack[vm.sp].as_int64;
         --vm.sp;
-        vm.ip += 5;
+        vm.ip += 3;
         break;
     }
     case RLOAD:

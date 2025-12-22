@@ -46,7 +46,6 @@ symbol_t* context_add(context_t* context, const char* id, type_t type)
     if (symbol != NULL)
     {
         symbol->type = type;
-        symbol->global = context_is_global(context);
         // symbol->addr = vec_size(context->symbols);
         return symbol;
     }
@@ -54,7 +53,6 @@ symbol_t* context_add(context_t* context, const char* id, type_t type)
     symbol_t* new_symbol = malloc(sizeof (symbol_t));
     new_symbol->id = id;
     new_symbol->type = type;
-    new_symbol->global = context_is_global(context);
     new_symbol->addr = context_alloc_stack_addr(context);
     new_symbol->ret_type = MT_UNKNOWN;  // Initialize ret_type
 

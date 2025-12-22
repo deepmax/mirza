@@ -260,8 +260,14 @@ type_t eval_binary(ast_binary_t* ast)
         case TK_LT:
             EMIT(RLT);
             break;
+        case TK_LTE:
+            EMIT(RLE);
+            break;
         case TK_GT:
             EMIT(RGT);
+            break;
+        case TK_GTE:
+            EMIT(RGE);
             break;
         default:
             ;
@@ -306,17 +312,15 @@ type_t eval_print(ast_print_t* ast)
 type_t eval_variable(ast_variable_t* ast)
 {
     type_t var_type = ast->symbol->type;
-    bool is_global = ast->symbol->global;
     uint16_t addr = ast->symbol->addr;
     
     if (is_integer_type(var_type)) {
-        EMIT(ILOAD, var_type, NUM16(addr), is_global ? 1 : 0);
+        EMIT(ILOAD, NUM16(addr));
         // Return original type to preserve signed/unsigned information
         // Operations will convert to int64 if needed
         return var_type;
     } else if (var_type == MT_REAL) {
-        if (is_global) EMIT(RLOAD, NUM16(addr));
-        else EMIT(RLOAD, NUM16(addr));
+        EMIT(RLOAD, NUM16(addr));
     } else if (var_type == MT_STR) {
         EMIT(SLOAD, NUM16(addr));
     }
@@ -327,7 +331,6 @@ type_t eval_assign(ast_assign_t* ast)
 {
     type_t expr_type = eval(ast->expr);
     type_t var_type = ast->symbol->type;
-    bool is_global = ast->symbol->global;
     uint16_t addr = ast->symbol->addr;
 
     // If variable type is unknown, infer from expression
@@ -346,10 +349,9 @@ type_t eval_assign(ast_assign_t* ast)
 
     // Store using unified opcode
     if (is_integer_type(var_type)) {
-        EMIT(ISTORE, var_type, NUM16(addr), is_global ? 1 : 0);
+        EMIT(ISTORE, NUM16(addr));
     } else if (var_type == MT_REAL) {
-        if (is_global) EMIT(RSTORE, NUM16(addr));
-        else EMIT(RSTORE, NUM16(addr));
+        EMIT(RSTORE, NUM16(addr));
     } else if (var_type == MT_STR) {
         EMIT(SSTORE, NUM16(addr));
     }

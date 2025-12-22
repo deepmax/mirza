@@ -1,9 +1,2 @@
-print len("hello")
-print "\n"
-print len("سلام")
-print "\n"
 
-var a = len(12)
-
-print a
-
+print inc(1)

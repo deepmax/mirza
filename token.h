@@ -18,6 +18,7 @@ typedef enum
     TK_TRUE,
     TK_FALSE,
     TK_IF,
+    TK_OF,
     TK_ELSE,
     TK_LOOP,
     TK_FOR,

@@ -443,7 +443,6 @@ ast_t* func_call(const char* id)
         builtin_symbol->type = MT_FUNC;
         builtin_symbol->ret_type = builtin->ret_type;
         builtin_symbol->addr = 0xFFFF;  // Special marker for builtin functions
-        builtin_symbol->global = true;
         
         match(TK_L_PAREN);
 

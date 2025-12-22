@@ -39,6 +39,7 @@ static const keyword_t KEYWORDS[] = {
     {"and", TK_AND},
     {"or", TK_OR},
     {"not", TK_NOT},
+    {"of", TK_OF},
     {"extern", TK_EXTERN},
 };
 

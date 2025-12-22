@@ -1,4 +1,6 @@
 #include "builtin.h"
+#include "types.h"
+#include "vm.h"
 #include <string.h>
 
 // Acceptable type arrays for builtin functions
@@ -13,6 +15,8 @@ static const builtin_func_t BUILTIN_FUNCTIONS[] = {
     {"dec", 1, MT_INT64, IDEC, true, INTEGER_TYPES},
     {"pow", 2, MT_INT64, IPOW, true, INTEGER_TYPES},
     {"rabs", 1, MT_REAL, RABS, true, REAL_TYPES},
+    {"rinc", 1, MT_REAL, RINC, true, REAL_TYPES},
+    {"rdec", 1, MT_REAL, RDEC, true, REAL_TYPES},
     {"rmod", 2, MT_REAL, RMOD, true, REAL_TYPES},
     {"rpow", 2, MT_REAL, RPOW, true, REAL_TYPES},
     {"rsqrt", 1, MT_REAL, RSQRT, true, REAL_TYPES},
@@ -28,6 +32,7 @@ static const builtin_func_t BUILTIN_FUNCTIONS[] = {
     {"rceil", 1, MT_REAL, RCEIL, true, REAL_TYPES},
     {"rfloor", 1, MT_REAL, RFLOOR, true, REAL_TYPES},
     {"rround", 1, MT_REAL, RROUND, true, REAL_TYPES},
+    {"pi", 0, MT_REAL, RCONST_PI, true, NULL},
     {"slen", 1, MT_INT64, SLEN, true, STR_TYPES},
 };
 
