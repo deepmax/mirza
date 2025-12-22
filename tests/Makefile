@@ -98,6 +98,10 @@ $(BUILD)/test_int: test_int.c $(COMPILER_OBJECTS) $(BUILD)/tests.o
 	mkdir -p $(BUILD)
 	$(CC) $(CFLAGS) $< $(COMPILER_OBJECTS) $(BUILD)/tests.o $(LIBS) -o $@
 
+$(BUILD)/test_builtin: test_builtin.c $(COMPILER_OBJECTS) $(BUILD)/tests.o
+	mkdir -p $(BUILD)
+	$(CC) $(CFLAGS) $< $(COMPILER_OBJECTS) $(BUILD)/tests.o $(LIBS) -o $@
+
 # Run all tests
 test-all: all
 	@echo "Running all tests..."
@@ -142,6 +146,9 @@ test-basics: $(BUILD)/test_basics
 
 test-int: $(BUILD)/test_int
 	$(BUILD)/test_int
+
+test-builtin: $(BUILD)/test_builtin
+	$(BUILD)/test_builtin
 
 # Prevent make from trying to build arguments as targets
 %:

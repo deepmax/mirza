@@ -31,7 +31,6 @@ enum
     IDIV,
     IMOD,
     IMUL,
-    IPOW,
     IAND,
     IOR,
     IBXOR,

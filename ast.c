@@ -491,34 +491,65 @@ static bool is_type_acceptable(type_t type, const type_t* acceptable_types)
     return false;
 }
 
+// Handle builtin function calls
+static type_t eval_builtin_func(ast_func_call_t* ast)
+{
+    // Look up the builtin function by name
+    const builtin_func_t* builtin = builtin_lookup(ast->symbol->id);
+    if (builtin == NULL)
+    {
+        panic("Builtin function not found.");
+    }
+    
+    // Evaluate arguments and check types
+    type_t arg_type = MT_UNKNOWN;
+    for (size_t i = 0; i < vec_size(ast->args); i++)
+    {
+        arg_type = eval(vec_get(ast->args, i));
+        
+        // Check if the argument type is acceptable
+        if (!is_type_acceptable(arg_type, builtin->acceptable_types))
+        {
+            panic("Builtin function argument type mismatch.");
+        }
+    }
+    
+    // Special handling for abs: dispatch based on argument type
+    if (strcmp(builtin->name, "abs") == 0)
+    {
+        if (is_integer_type(arg_type))
+        {
+            // Value is already normalized to int64 on stack after eval
+            EMIT(IABS);
+            // Convert back to original type if needed
+            if (arg_type != MT_INT64) {
+                emit_conversion(MT_INT64, arg_type);
+            }
+            return arg_type;  // Return same type as input
+        }
+        else if (arg_type == MT_REAL)
+        {
+            EMIT(RABS);
+            return MT_REAL;  // Return same type as input
+        }
+        else
+        {
+            panic("abs function requires numeric type.");
+        }
+    }
+    
+    // Emit the builtin function opcode
+    EMIT(builtin->opcode);
+    
+    return builtin->ret_type;
+}
+
 type_t eval_func_call(ast_func_call_t* ast)
 {
     // Check if this is a builtin function (marked by special addr value)
     if (ast->symbol->addr == 0xFFFF)
     {
-        // Look up the builtin function by name
-        const builtin_func_t* builtin = builtin_lookup(ast->symbol->id);
-        if (builtin == NULL)
-        {
-            panic("Builtin function not found.");
-        }
-        
-        // Evaluate arguments and check types
-        for (size_t i = 0; i < vec_size(ast->args); i++)
-        {
-            type_t arg_type = eval(vec_get(ast->args, i));
-            
-            // Check if the argument type is acceptable
-            if (!is_type_acceptable(arg_type, builtin->acceptable_types))
-            {
-                panic("Builtin function argument type mismatch.");
-            }
-        }
-        
-        // Emit the builtin function opcode
-        EMIT(builtin->opcode);
-        
-        return builtin->ret_type;
+        return eval_builtin_func(ast);
     }
     
     // Regular user function call

@@ -50,7 +50,6 @@ const opcode_t OPCODES[] = {
     {IDIV, 0, "idiv"},
     {IMOD, 0, "imod"},
     {IMUL, 0, "imul"},
-    {IPOW, 0, "ipow"},
     {IAND, 0, "iand"},
     {IOR, 0, "ior"},
     {IBXOR, 0, "ibxor"},
@@ -297,13 +296,6 @@ void exec_opcode(uint8_t* opcode)
     case IMUL:
     {
         vm.stack[vm.sp - 1].as_int64 = vm.stack[vm.sp - 1].as_int64 * vm.stack[vm.sp].as_int64;
-        --vm.sp;
-        ++vm.ip;
-        break;
-    }
-    case IPOW:
-    {
-        vm.stack[vm.sp - 1].as_int64 = (int64_t)pow((double)vm.stack[vm.sp - 1].as_int64, (double)vm.stack[vm.sp].as_int64);
         --vm.sp;
         ++vm.ip;
         break;
