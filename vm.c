@@ -15,7 +15,7 @@ typedef struct
     uint32_t bp;          // Base index
     value_t* stack;
     size_t stack_size;
-    buffer_t program;
+    buffer_t code;
     buffer_t data;
     struct {
         uint8_t halt: 1;
@@ -129,7 +129,7 @@ const opcode_t OPCODES[] = {
 void vm_init(size_t stack_size, size_t code_size)
 {
     buffer_init(&vm.data, 0);
-    buffer_init(&vm.program, code_size);
+    buffer_init(&vm.code, code_size);
     vm.stack = malloc(sizeof (type_t) * stack_size);
     vm.stack_size = stack_size;
     vm.ip = 0;
@@ -142,7 +142,7 @@ void vm_free()
 {
     free(vm.stack);
     buffer_free(&vm.data);
-    buffer_free(&vm.program);
+    buffer_free(&vm.code);
 }
 
 void exec_opcode(uint8_t* opcode)
@@ -794,7 +794,7 @@ void vm_exec()
 {
     while (!vm.flags.halt)
     {
-        exec_opcode(vm.program.data + vm.ip);
+        exec_opcode(vm.code.data + vm.ip);
     }
 }
 
@@ -811,14 +811,14 @@ void vm_dump()
 
 void vm_dasm()
 {
-    for (size_t i = 0; i < vm.program.used; i++)
+    for (size_t i = 0; i < vm.code.used; i++)
     {
-        opcode_t opcode = OPCODES[vm.program.data[i]];
+        opcode_t opcode = OPCODES[vm.code.data[i]];
 
         printf("%lx\t %s", i, opcode.name);
 
         for (int a = 0; a < opcode.arg_size; a++)
-            printf(" 0x%x", (vm.program.data[i + a + 1] & 0xFF));
+            printf(" 0x%x", (vm.code.data[i + a + 1] & 0xFF));
         printf("\n");
 
         i += opcode.arg_size;
@@ -827,17 +827,17 @@ void vm_dasm()
 
 void vm_code_emit(uint8_t* bytes, size_t len)
 {
-    buffer_adds(&vm.program, bytes, len);
+    buffer_adds(&vm.code, bytes, len);
 }
 
 void vm_code_set(size_t index, uint8_t* bytes, size_t len)
 {
-    buffer_sets(&vm.program, index, bytes, len);
+    buffer_sets(&vm.code, index, bytes, len);
 }
 
 size_t vm_code_addr()
 {
-    return buffer_size(&vm.program);
+    return buffer_size(&vm.code);
 }
 
 void vm_data_emit(uint8_t* bytes, size_t len)
@@ -854,7 +854,7 @@ void vm_save(char* name)
 {
     // this must have data ...
     FILE* file = fopen(name, "w");
-    fwrite(vm.program.data, vm.program.used, 1, file);
+    fwrite(vm.code.data, vm.code.used, 1, file);
     fclose(file);
 }
 
