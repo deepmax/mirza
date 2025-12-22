@@ -145,7 +145,7 @@ void vm_init(size_t stack_size, size_t code_size);
 void vm_free();
 void vm_exec();
 void vm_dump();
-void vm_dasm();
+void vm_dasm(const char* filename);
 void vm_save(char* name);
 void vm_load(char* name);
 void vm_code_emit(uint8_t* bytes, size_t len);

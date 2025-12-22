@@ -10,3 +10,14 @@ for var i = 0; i < alen(b); inc(i)
 {
     print b[i]
 }
+
+
+
+#func foo(x: i64): void {
+#    func zoo(x: i64): void {
+#        ret x
+#    }
+#    print(zoo(x))
+#}
+#var z: i64 = 42
+#foo(z)

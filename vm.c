@@ -809,20 +809,29 @@ void vm_dump()
     printf("-- end   --\n");
 }
 
-void vm_dasm()
+void vm_dasm(const char* filename)
 {
+    FILE* file = fopen(filename, "w");
+    if (file == NULL)
+    {
+        fprintf(stderr, "Error: Cannot open file '%s' for writing\n", filename);
+        return;
+    }
+
     for (size_t i = 0; i < vm.code.used; i++)
     {
         opcode_t opcode = OPCODES[vm.code.data[i]];
 
-        printf("%lx\t %s", i, opcode.name);
+        fprintf(file, "%lx\t %s", i, opcode.name);
 
         for (int a = 0; a < opcode.arg_size; a++)
-            printf(" 0x%x", (vm.code.data[i + a + 1] & 0xFF));
-        printf("\n");
+            fprintf(file, " 0x%x", (vm.code.data[i + a + 1] & 0xFF));
+        fprintf(file, "\n");
 
         i += opcode.arg_size;
     }
+
+    fclose(file);
 }
 
 void vm_code_emit(uint8_t* bytes, size_t len)

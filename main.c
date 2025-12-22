@@ -8,12 +8,12 @@ int main(int argc, char *argv[])
 {
     int opt;
     int use_stdin = 0;
-    int dasm_flag = 0;
+    char* dasm_filename = NULL;
     int noexec_flag = 0;
 
     static struct option long_options[] = {
         {"stdin", no_argument, 0, 's'},
-        {"dasm", no_argument, 0, 'd'},
+        {"dasm", required_argument, 0, 'd'},
         {"noexec", no_argument, 0, 'n'},
         {0, 0, 0, 0}
     };
@@ -26,22 +26,21 @@ int main(int argc, char *argv[])
             use_stdin = 1;
             break;
         case 'd':
-            dasm_flag = 1;
+            dasm_filename = optarg;
             break;
         case 'n':
             noexec_flag = 1;
             break;
         default:
-            fprintf(stderr, "Usage: %s [--stdin] [--dasm] [--noexec] [<file.lm>]\n", argv[0]);
+            fprintf(stderr, "Usage: %s [--stdin] [--dasm <file>] [--noexec] [<file.lm>]\n", argv[0]);
             fprintf(stderr, "  --stdin    Read code from stdin instead of a file\n");
-            fprintf(stderr, "  --dasm     Show disassembly\n");
+            fprintf(stderr, "  --dasm     Write disassembly to file\n");
             fprintf(stderr, "  --noexec   Only compile, do not execute\n");
             return 1;
         }
     }
 
     bool_t execute = !noexec_flag;
-    bool_t dasm = dasm_flag;
 
     if (use_stdin)
     {
@@ -51,20 +50,20 @@ int main(int argc, char *argv[])
             return 1;
         }
         parser_stdin();
-        parser_start(execute, dasm);
+        parser_start(execute, dasm_filename);
         parser_free();
     }
     else if (optind < argc)
     {
         parser_load(argv[optind]);
-        parser_start(execute, dasm);
+        parser_start(execute, dasm_filename);
         parser_free();
     }
     else
     {
-        fprintf(stderr, "Usage: %s [--stdin] [--dasm] [--noexec] [<file.lm>]\n", argv[0]);
+        fprintf(stderr, "Usage: %s [--stdin] [--dasm <file>] [--noexec] [<file.lm>]\n", argv[0]);
         fprintf(stderr, "  --stdin    Read code from stdin instead of a file\n");
-        fprintf(stderr, "  --dasm     Show disassembly\n");
+        fprintf(stderr, "  --dasm     Write disassembly to file\n");
         fprintf(stderr, "  --noexec   Only compile, do not execute\n");
         return 1;
     }

@@ -123,10 +123,32 @@ type_t eval_constant(ast_constant_t* ast)
     return ast->type;
 }
 
-// Helper function to get the original type of an AST node for type checking
-// For constants, this returns the original type before normalization
-// For other expressions, we evaluate to get the type
-static type_t get_expr_type_for_checking(ast_t* ast)
+type_t eval_variable(ast_variable_t* ast)
+{
+    type_t var_type = ast->symbol->type;
+    uint16_t addr = ast->symbol->addr;
+    
+    if (is_integer_type(var_type)) {
+        EMIT(ILOAD, NUM16(addr));
+        // Return original type to preserve signed/unsigned information
+        // Operations will convert to int64 if needed
+        return var_type;
+    } else if (var_type == MT_REAL) {
+        EMIT(RLOAD, NUM16(addr));
+    } else if (var_type == MT_STR) {
+        EMIT(SLOAD, NUM16(addr));
+    }
+    return var_type;
+}
+
+// Forward declarations for type inference
+type_t eval_unary(ast_unary_t* ast);
+type_t eval_binary(ast_binary_t* ast);
+type_t eval_func_call(ast_func_call_t* ast);
+
+// Helper function to infer the type of an AST node without emitting code
+// This recursively determines types for all expression types
+static type_t infer_type(ast_t* ast)
 {
     if (ast == NULL)
         return MT_UNKNOWN;
@@ -138,9 +160,63 @@ static type_t get_expr_type_for_checking(ast_t* ast)
         return constant->type;
     }
     
-    // For other expressions, evaluate to get the type
-    // Note: This will emit code, but we need the type information
-    return eval(ast);
+    // For variables, return the symbol's type without emitting code
+    if (ast->base->eval == (eval_t) eval_variable)
+    {
+        ast_variable_t* variable = (ast_variable_t*) ast;
+        return variable->symbol->type;
+    }
+    
+    // For unary expressions, infer the type of the operand
+    if (ast->base->eval == (eval_t) eval_unary)
+    {
+        ast_unary_t* unary = (ast_unary_t*) ast;
+        type_t expr_type = infer_type(unary->expr);
+        
+        // Unary operations preserve the type (or normalize to int64 for integers)
+        if (is_integer_type(expr_type))
+            return MT_INT64;
+        return expr_type;
+    }
+    
+    // For binary expressions, infer types of both operands
+    if (ast->base->eval == (eval_t) eval_binary)
+    {
+        ast_binary_t* binary = (ast_binary_t*) ast;
+        type_t l_type = infer_type(binary->lhs_expr);
+        type_t r_type = infer_type(binary->rhs_expr);
+        
+        // Binary operations on integers normalize to int64
+        if (is_integer_type(l_type) && is_integer_type(r_type))
+            return MT_INT64;
+        // Binary operations on reals return real
+        if (l_type == MT_REAL && r_type == MT_REAL)
+            return MT_REAL;
+        
+        return MT_UNKNOWN;
+    }
+    
+    // For function calls, return the function's return type
+    if (ast->base->eval == (eval_t) eval_func_call)
+    {
+        ast_func_call_t* func_call = (ast_func_call_t*) ast;
+        type_t ret_type = func_call->symbol->extra.func.ret_type;
+        if (ret_type == MT_UNKNOWN || ret_type == MT_VOID) {
+            ret_type = MT_INT64;  // Default to int64 if not set
+        }
+        return ret_type;
+    }
+    
+    // For other expression types, we can't infer without evaluating
+    // This should not happen for type checking purposes
+    return MT_UNKNOWN;
+}
+
+// Helper function to get the original type of an AST node for type checking
+// This uses infer_type to avoid emitting code during type checking
+static type_t get_expr_type_for_checking(ast_t* ast)
+{
+    return infer_type(ast);
 }
 
 type_t eval_unary(ast_unary_t* ast)
@@ -308,24 +384,6 @@ type_t eval_binary(ast_binary_t* ast)
     panic("Binary error");
 
     return MT_UNKNOWN;
-}
-
-type_t eval_variable(ast_variable_t* ast)
-{
-    type_t var_type = ast->symbol->type;
-    uint16_t addr = ast->symbol->addr;
-    
-    if (is_integer_type(var_type)) {
-        EMIT(ILOAD, NUM16(addr));
-        // Return original type to preserve signed/unsigned information
-        // Operations will convert to int64 if needed
-        return var_type;
-    } else if (var_type == MT_REAL) {
-        EMIT(RLOAD, NUM16(addr));
-    } else if (var_type == MT_STR) {
-        EMIT(SLOAD, NUM16(addr));
-    }
-    return var_type;
 }
 
 type_t eval_assign(ast_assign_t* ast)

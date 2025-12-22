@@ -11,7 +11,7 @@ extern "C"
 void parser_load(const char* filename);
 void parser_stdin();
 void parser_free();
-void parser_start(bool_t execute, bool_t dasm);
+void parser_start(bool_t execute, const char* dasm_filename);
 
 #ifdef __cplusplus
 }

@@ -1,9 +1,7 @@
-func foo(m: real) : void {
-
-    for var i = 1.0; i < m; i = i + 1.0 {
-        print(">> ", i + 0.5, " ", pi * i, "\n")
-    }
+func foo(x: i64): void {
+    ret x + 1
 }
 
-foo(5.0) # 5 is integer but foo needs real, compile must throw error
+var n: i64 = 0
+print(foo(0 + foo(foo(1 + foo(n)))))
 

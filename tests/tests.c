@@ -93,7 +93,7 @@ void compile_and_run(const char* code)
     
     // Parse and execute from file
     parser_load(tmp_filename);
-    parser_start(1, 0);  // execute=true, dasm=false
+    parser_start(1, NULL);  // execute=true, dasm_filename=NULL
     parser_free();
     
     // Free VM after execution

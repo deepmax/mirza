@@ -584,7 +584,7 @@ ast_t* statement()
     }
 }
 
-void parser_start(bool_t execute, bool_t dasm)
+void parser_start(bool_t execute, const char* dasm_filename)
 {
     vm_init(2048, 512);
 
@@ -595,9 +595,9 @@ void parser_start(bool_t execute, bool_t dasm)
 
     eval((ast_t*) block);
 
-    if (dasm)
+    if (dasm_filename != NULL)
     {
-        vm_dasm();
+        vm_dasm(dasm_filename);
     }
     
     if (execute)
